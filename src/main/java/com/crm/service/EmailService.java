@@ -1,0 +1,184 @@
+package com.crm.service;
+
+import com.crm.dto.WebsiteLeadDTO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class EmailService {
+
+    private final JavaMailSender mailSender;
+
+    @Value("${app.admin.notification-email}")
+    private String adminEmail;
+
+    @Async
+    public void sendWelcomeEmail(String to, String name, String employeeCode, String password) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Welcome to Samriddhi Financial Services - Your Account Details");
+            message.setText(String.format("""
+                Dear %s,
+                
+                Welcome to the Samriddhi Financial Services! Your employee account has been created successfully.
+                
+                Your Account Details:
+                ------------------------
+                Employee Code: %s
+                Email: %s
+                Password: %s
+                
+                Important Notes:
+                1. Please change your password after first login
+                2. Never share your password with anyone
+                3. For security reasons, you will be prompted to change your password on first login
+                4. You can login using your email and the password provided above
+                
+                Login URL: Contact Admin
+                
+                Best regards,
+                Samriddhi Financial Services Admin Team
+                """, name, employeeCode, to, password));
+
+            mailSender.send(message);
+            log.info("Welcome email sent to: {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", to, e.getMessage());
+        }
+    }
+
+
+    // Add this method to EmailService.java
+
+    @Async
+    public void sendWebsiteLeadNotification(WebsiteLeadDTO leadDTO) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(adminEmail);
+            message.setSubject("New Website Lead - " + leadDTO.getName());
+            message.setText(String.format("""
+            New lead submitted from website!
+            
+            Customer Details:
+            -----------------
+            Name: %s
+            Email: %s
+            Phone: %s
+            Service: %s
+            Message: %s
+            
+            Please login to the Samriddhi Financial Services system to assign and follow up with this lead.
+            
+            
+            """,
+                    leadDTO.getName(),
+                    leadDTO.getEmail(),
+                    leadDTO.getPhoneNumber(),
+                    leadDTO.getInterestedService() != null ? leadDTO.getInterestedService().getDisplayName() : "Not specified",
+                    leadDTO.getRemarks() != null ? leadDTO.getRemarks() : "No message"
+            ));
+
+            mailSender.send(message);
+            log.info("Website lead notification sent to admin: {}", adminEmail);
+        } catch (Exception e) {
+            log.error("Failed to send website lead notification: {}", e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendPasswordResetEmail(String to, String name, String newPassword) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Samriddhi Financial Services System - Password Reset Notification");
+            message.setText(String.format("""
+                Dear %s,
+                
+                Your password has been reset by the administrator.
+                
+                New Login Credentials:
+                ---------------------
+                Email: %s
+                New Password: %s
+                
+                Security Instructions:
+                1. Please change this password after logging in
+                2. Do not share this password with anyone
+                3. If you didn't request this reset, please contact the administrator immediately at %s
+                
+                Login URL: Contact Admin
+                
+                Best regards,
+                Samriddhi Financial Services Admin Team
+                """, name, to, newPassword, adminEmail));
+
+            mailSender.send(message);
+            log.info("Password reset email sent to: {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send password reset email to {}: {}", to, e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendLeadAssignmentEmail(String to, String employeeName, String leadName, String leadType) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("New Lead Assigned - Samriddhi Financial Services");
+            message.setText(String.format("""
+                Dear %s,
+                
+                A new lead has been assigned to you.
+                
+                Lead Details:
+                -------------
+                Name: %s
+                Type: %s
+                
+                Please log in to the Samriddhi Financial Services system to view more details and take necessary action.
+                
+              
+                
+                Best regards,
+                Samriddhi Financial Services Admin Team
+                """, employeeName, leadName, leadType));
+
+            mailSender.send(message);
+            log.info("Lead assignment email sent to: {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send lead assignment email to {}: {}", to, e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendPasswordChangeConfirmation(String to, String name) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Samriddhi Financial Services - Password Changed Successfully");
+            message.setText(String.format("""
+                Dear %s,
+                
+                This is to confirm that your password has been successfully changed.
+                
+                If you did not make this change, please contact the system administrator immediately at %s.
+                
+                Best regards,
+                Samriddhi Financial Services Admin Team
+                """, name, adminEmail));
+
+            mailSender.send(message);
+            log.info("Password change confirmation sent to: {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send password change confirmation to {}: {}", to, e.getMessage());
+        }
+    }
+}

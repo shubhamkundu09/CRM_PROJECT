@@ -1,0 +1,387 @@
+package com.crm.controller;
+
+import com.crm.dto.*;
+import com.crm.entity.Employee;
+import com.crm.entity.Lead;
+import com.crm.entity.LeadStage;
+import com.crm.entity.LeadType;
+import com.crm.repository.EmployeeRepository;
+import com.crm.repository.LeadRepository;
+import com.crm.service.EmailService;
+import com.crm.service.LeadHistoryService;
+import com.crm.util.CryptoUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@RestController
+@RequiredArgsConstructor
+@Slf4j
+public class WebsiteLeadController {
+
+    private final LeadRepository leadRepository;
+    private final EmployeeRepository employeeRepository;
+    private final EmailService emailService;
+    private final LeadHistoryService leadHistoryService;
+
+    private static final String ADMIN_EMAIL = "redcircle0908@gmail.com";
+    private static final String WEBSITE_SOURCE = "Website Lead Form";
+
+    @PostMapping("/api/website/leads")
+    public ResponseEntity<ApiResponse<LeadResponseDTO>> submitWebsiteLead(
+            @Valid @RequestBody WebsiteLeadDTO websiteLeadDTO,
+            HttpServletRequest request) {
+
+        log.info("New website lead submission from: {}", websiteLeadDTO.getEmail());
+
+        // Check for duplicate email
+        if (leadRepository.existsByEmail(websiteLeadDTO.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponse.error("A lead with this email already exists. Our team will contact you shortly.",
+                            409, request.getRequestURI()));
+        }
+
+        // Assign website leads to admin
+        Employee defaultEmployee = employeeRepository.findByEmail(ADMIN_EMAIL)
+                .orElseThrow(() -> new RuntimeException("Admin user not found. Please ensure admin exists."));
+
+        // Create lead from website submission
+        Lead lead = buildLeadFromWebsiteDTO(websiteLeadDTO, defaultEmployee);
+        Lead savedLead = leadRepository.save(lead);
+
+        // Send notification email to admin
+        emailService.sendWebsiteLeadNotification(websiteLeadDTO);
+
+        log.info("Website lead saved successfully with ID: {}", savedLead.getId());
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(mapToResponseDTO(savedLead),
+                        "Lead submitted successfully! Our team will contact you within 24 hours.",
+                        request.getRequestURI()));
+    }
+
+    @GetMapping("/api/admin/website-leads")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getWebsiteLeads(HttpServletRequest request) {
+        log.info("Fetching all website leads");
+
+        List<LeadResponseDTO> websiteLeads = leadRepository.findAll()
+                .stream()
+                .filter(lead -> WEBSITE_SOURCE.equals(lead.getSource()) && lead.getIsActive())
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(websiteLeads,
+                "Website leads retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/api/admin/website-leads/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<LeadResponseDTO>> getWebsiteLeadById(
+            @PathVariable String id,
+            HttpServletRequest request) {
+        Long decryptedId = CryptoUtil.decryptToLong(id);
+        log.info("Fetching website lead with ID: {}", decryptedId);
+
+        Lead lead = leadRepository.findById(decryptedId)
+                .filter(l -> WEBSITE_SOURCE.equals(l.getSource()))
+                .orElseThrow(() -> new RuntimeException("Website lead not found with ID: " + decryptedId));
+
+        return ResponseEntity.ok(ApiResponse.success(mapToResponseDTO(lead),
+                "Website lead retrieved successfully", request.getRequestURI()));
+    }
+
+    @PutMapping("/api/admin/website-leads/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<LeadResponseDTO>> updateWebsiteLead(
+            @PathVariable String id,
+            @RequestBody WebsiteLeadUpdateDTO updateDTO,
+            HttpServletRequest request) {
+
+        Long decryptedId = CryptoUtil.decryptToLong(id);
+        log.info("Admin updating website lead with ID: {}", decryptedId);
+
+        Lead lead = leadRepository.findById(decryptedId)
+                .orElseThrow(() -> new RuntimeException("Lead not found with ID: " + decryptedId));
+
+        List<String> changes = new ArrayList<>();
+
+        // Update lead type
+        if (updateDTO.getLeadType() != null && updateDTO.getLeadType() != lead.getLeadType()) {
+            changes.add("Lead Type changed from " + lead.getLeadType() + " to " + updateDTO.getLeadType());
+            lead.setLeadType(updateDTO.getLeadType());
+        }
+
+        // Update lead stage
+        if (updateDTO.getLeadStage() != null && updateDTO.getLeadStage() != lead.getLeadStage()) {
+            String oldStage = lead.getLeadStage().toString();
+            String newStage = updateDTO.getLeadStage().toString();
+            changes.add("Lead Stage changed from " + oldStage + " to " + newStage);
+
+            // Get admin employee for history
+            Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
+                    .orElseThrow(() -> new RuntimeException("Admin not found"));
+            leadHistoryService.recordStageChange(lead, admin, oldStage, newStage,
+                    "Stage updated by admin for website lead");
+            lead.setLeadStage(updateDTO.getLeadStage());
+        }
+
+        // Update assigned employee
+        if (updateDTO.getAssignedEmployeeId() != null) {
+            Employee newEmployee = employeeRepository.findById(updateDTO.getAssignedEmployeeId())
+                    .orElseThrow(() -> new RuntimeException("Employee not found with ID: " + updateDTO.getAssignedEmployeeId()));
+
+            if (!newEmployee.getId().equals(lead.getAssignedEmployee().getId())) {
+                changes.add("Assigned employee changed from " + lead.getAssignedEmployee().getEmail() +
+                        " to " + newEmployee.getEmail());
+                lead.setAssignedEmployee(newEmployee);
+
+                // Send assignment email to new employee
+                emailService.sendLeadAssignmentEmail(
+                        newEmployee.getEmail(),
+                        newEmployee.getFirstName() + " " + newEmployee.getLastName(),
+                        lead.getName(),
+                        lead.getLeadType().getDescription()
+                );
+            }
+        }
+
+        // Update remarks
+        if (updateDTO.getRemarks() != null && !updateDTO.getRemarks().equals(lead.getRemarks())) {
+            changes.add("Remarks updated");
+            lead.setRemarks(updateDTO.getRemarks());
+        }
+
+        // Update follow-up date
+        if (updateDTO.getNextFollowUpDate() != null && !updateDTO.getNextFollowUpDate().equals(lead.getNextFollowUpDate())) {
+            changes.add("Follow-up date changed from " + lead.getNextFollowUpDate() +
+                    " to " + updateDTO.getNextFollowUpDate());
+            lead.setNextFollowUpDate(updateDTO.getNextFollowUpDate());
+        }
+
+        // Update follow-up description
+        if (updateDTO.getNextFollowUp() != null && !updateDTO.getNextFollowUp().equals(lead.getNextFollowUp())) {
+            changes.add("Follow-up description updated");
+            lead.setNextFollowUp(updateDTO.getNextFollowUp());
+        }
+
+        lead.setLastUpdatedBy("ADMIN");
+        lead.setUpdateCount(lead.getUpdateCount() + 1);
+
+        Lead savedLead = leadRepository.save(lead);
+
+        // Record history if there are changes
+        if (!changes.isEmpty()) {
+            String changesText = String.join("; ", changes);
+            Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
+                    .orElseThrow(() -> new RuntimeException("Admin not found"));
+            leadHistoryService.recordLeadUpdate(savedLead, admin, changesText,
+                    "Website lead updated by admin");
+        }
+
+        log.info("Website lead {} updated successfully with {} changes", decryptedId, changes.size());
+        return ResponseEntity.ok(ApiResponse.success(mapToResponseDTO(savedLead),
+                "Website lead updated successfully", request.getRequestURI()));
+    }
+
+    @DeleteMapping("/api/admin/website-leads/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteWebsiteLead(
+            @PathVariable String id,
+            HttpServletRequest request) {
+        Long decryptedId = CryptoUtil.decryptToLong(id);
+        log.info("Deleting (soft delete) website lead with ID: {}", decryptedId);
+
+        Lead lead = leadRepository.findById(decryptedId)
+                .orElseThrow(() -> new RuntimeException("Lead not found with ID: " + decryptedId));
+
+        lead.setIsActive(false);
+        lead.setLastUpdatedBy("ADMIN");
+        leadRepository.save(lead);
+
+        log.info("Website lead {} soft deleted successfully", decryptedId);
+        return ResponseEntity.ok(ApiResponse.success("Website lead deleted successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/api/admin/website-leads/statistics")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getWebsiteLeadStatistics(HttpServletRequest request) {
+        log.info("Fetching website lead statistics");
+
+        List<Lead> websiteLeads = leadRepository.findAll().stream()
+                .filter(lead -> WEBSITE_SOURCE.equals(lead.getSource()))
+                .collect(Collectors.toList());
+
+        Map<String, Long> statistics = new HashMap<>();
+        statistics.put("total", (long) websiteLeads.size());
+        statistics.put("active", websiteLeads.stream().filter(Lead::getIsActive).count());
+        statistics.put("inactive", websiteLeads.stream().filter(l -> !l.getIsActive()).count());
+        statistics.put("interested", websiteLeads.stream()
+                .filter(l -> l.getLeadStage() == LeadStage.INTERESTED && l.getIsActive()).count());
+        statistics.put("not_interested", websiteLeads.stream()
+                .filter(l -> l.getLeadStage() == LeadStage.NOT_INTERESTED && l.getIsActive()).count());
+        statistics.put("normal", websiteLeads.stream()
+                .filter(l -> l.getLeadStage() == LeadStage.NORMAL && l.getIsActive()).count());
+
+        // Statistics by lead type
+        statistics.put("hot_leads", websiteLeads.stream()
+                .filter(l -> l.getLeadType() == LeadType.HOT && l.getIsActive()).count());
+        statistics.put("warm_leads", websiteLeads.stream()
+                .filter(l -> l.getLeadType() == LeadType.WARM && l.getIsActive()).count());
+        statistics.put("cold_leads", websiteLeads.stream()
+                .filter(l -> l.getLeadType() == LeadType.COLD && l.getIsActive()).count());
+
+        return ResponseEntity.ok(ApiResponse.success(statistics,
+                "Website lead statistics retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/api/admin/website-leads/followups/today")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getTodayWebsiteFollowUps(HttpServletRequest request) {
+        log.info("Fetching today's follow-ups for website leads");
+
+        List<LeadResponseDTO> todayFollowUps = leadRepository.findByNextFollowUpDate(LocalDate.now())
+                .stream()
+                .filter(lead -> WEBSITE_SOURCE.equals(lead.getSource()) && lead.getIsActive())
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(todayFollowUps,
+                "Today's website lead follow-ups retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/api/admin/website-leads/followups/pending")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getPendingWebsiteFollowUps(HttpServletRequest request) {
+        log.info("Fetching pending follow-ups for website leads");
+
+        List<LeadResponseDTO> pendingFollowUps = leadRepository.findByNextFollowUpDateBefore(LocalDate.now())
+                .stream()
+                .filter(lead -> WEBSITE_SOURCE.equals(lead.getSource()) && lead.getIsActive())
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(pendingFollowUps,
+                "Pending website lead follow-ups retrieved successfully", request.getRequestURI()));
+    }
+
+    @PatchMapping("/api/admin/website-leads/{id}/assign")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<LeadResponseDTO>> assignWebsiteLead(
+            @PathVariable String id,
+            @RequestParam Long employeeId,
+            HttpServletRequest request) {
+
+        Long decryptedId = CryptoUtil.decryptToLong(id);
+        log.info("Assigning website lead {} to employee {}", decryptedId, employeeId);
+
+        Lead lead = leadRepository.findById(decryptedId)
+                .filter(l -> WEBSITE_SOURCE.equals(l.getSource()))
+                .orElseThrow(() -> new RuntimeException("Website lead not found with ID: " + decryptedId));
+
+        Employee newEmployee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found with ID: " + employeeId));
+
+        String oldEmployeeEmail = lead.getAssignedEmployee().getEmail();
+        lead.setAssignedEmployee(newEmployee);
+        lead.setLastUpdatedBy("ADMIN");
+
+        Lead savedLead = leadRepository.save(lead);
+
+        // Record in history
+        Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+        String changes = "Assigned employee changed from " + oldEmployeeEmail + " to " + newEmployee.getEmail();
+        leadHistoryService.recordLeadUpdate(savedLead, admin, changes,
+                "Website lead reassigned by admin");
+
+        // Send email to new assignee
+        emailService.sendLeadAssignmentEmail(
+                newEmployee.getEmail(),
+                newEmployee.getFirstName() + " " + newEmployee.getLastName(),
+                lead.getName(),
+                lead.getLeadType().getDescription()
+        );
+
+        log.info("Website lead {} assigned to {} successfully", decryptedId, newEmployee.getEmail());
+        return ResponseEntity.ok(ApiResponse.success(mapToResponseDTO(savedLead),
+                "Website lead assigned successfully", request.getRequestURI()));
+    }
+
+    private Lead buildLeadFromWebsiteDTO(WebsiteLeadDTO dto, Employee defaultEmployee) {
+        return Lead.builder()
+                .name(dto.getName())
+                .email(dto.getEmail())
+                .phoneNumber(dto.getPhoneNumber())
+                .leadType(LeadType.WARM)
+                .leadStage(LeadStage.NORMAL)
+                .nextFollowUpDate(LocalDate.now().plusDays(2))
+                .remarks(dto.getRemarks() != null ? dto.getRemarks() : "New website lead")
+                .nextFollowUp("Initial contact - Customer inquiry from website")
+                .source(WEBSITE_SOURCE)
+                .isActive(true)
+                .interestedService(dto.getInterestedService())
+                .serviceSubcategory(dto.getServiceSubcategory())
+                .serviceSubSubcategory(dto.getServiceSubSubcategory())
+                .serviceDescription(dto.getServiceDescription())
+                .callsMadeCount(0)
+                .meetingsBookedCount(0)
+                .meetingsDoneCount(0)
+                .updateCount(0)
+                .lastUpdatedBy("WEBSITE")
+                .assignedEmployee(defaultEmployee)
+                .build();
+    }
+
+    private LeadResponseDTO mapToResponseDTO(Lead lead) {
+        LeadResponseDTO dto = new LeadResponseDTO();
+        dto.setId(lead.getId());
+        dto.setName(lead.getName());
+        dto.setEmail(lead.getEmail());
+        dto.setPhoneNumber(lead.getPhoneNumber());
+        dto.setLeadType(lead.getLeadType());
+        dto.setLeadStage(lead.getLeadStage());
+        dto.setNextFollowUpDate(lead.getNextFollowUpDate());
+        dto.setRemarks(lead.getRemarks());
+        dto.setNextFollowUp(lead.getNextFollowUp());
+        dto.setSource(lead.getSource());
+        dto.setIsActive(lead.getIsActive());
+        dto.setCallsMadeCount(lead.getCallsMadeCount());
+        dto.setMeetingsBookedCount(lead.getMeetingsBookedCount());
+        dto.setMeetingsDoneCount(lead.getMeetingsDoneCount());
+        dto.setInterestedService(lead.getInterestedService());
+        dto.setServiceSubcategory(lead.getServiceSubcategory());
+        dto.setServiceSubSubcategory(lead.getServiceSubSubcategory());
+        dto.setServiceDescription(lead.getServiceDescription());
+        dto.setCreatedAt(lead.getCreatedAt());
+        dto.setUpdatedAt(lead.getUpdatedAt());
+        dto.setUpdateCount(lead.getUpdateCount());
+        dto.setLastUpdatedBy(lead.getLastUpdatedBy());
+
+        if (lead.getAssignedEmployee() != null) {
+            EmployeeResponseDTO empDto = new EmployeeResponseDTO();
+            empDto.setId(lead.getAssignedEmployee().getId());
+            empDto.setFirstName(lead.getAssignedEmployee().getFirstName());
+            empDto.setLastName(lead.getAssignedEmployee().getLastName());
+            empDto.setEmail(lead.getAssignedEmployee().getEmail());
+            empDto.setEmployeeCode(lead.getAssignedEmployee().getEmployeeCode());
+            empDto.setDepartment(lead.getAssignedEmployee().getDepartment());
+            empDto.setPosition(lead.getAssignedEmployee().getPosition());
+            dto.setAssignedEmployee(empDto);
+        }
+
+        return dto;
+    }
+}
