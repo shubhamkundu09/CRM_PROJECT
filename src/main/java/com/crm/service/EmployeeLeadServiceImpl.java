@@ -28,6 +28,7 @@ public class EmployeeLeadServiceImpl implements EmployeeLeadService {
     private final LeadRepository leadRepository;
     private final EmployeeRepository employeeRepository;
     private final LeadHistoryService leadHistoryService;
+    private final EmailService emailService;
 
     @Override
     public LeadResponseDTO updateLead(Long leadId, EmployeeLeadUpdateDTO updateDTO, String employeeEmail) {
@@ -44,6 +45,8 @@ public class EmployeeLeadServiceImpl implements EmployeeLeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
+        // Create a copy of lead before changes for comparison
+        Lead oldLead = copyLead(lead);
         List<String> changes = new ArrayList<>();
         String oldStage = lead.getLeadStage().toString();
 
@@ -52,39 +55,48 @@ public class EmployeeLeadServiceImpl implements EmployeeLeadService {
             String contactInfo = processContactMade(lead, updateDTO);
             changes.add(contactInfo);
             lead.setLastContactDate(LocalDateTime.now());
+
+            // Record contact made in history
+            leadHistoryService.recordContactMade(lead, employee, "Phone/Email",
+                    updateDTO.getResponseMessage() != null ? updateDTO.getResponseMessage() : "Contact attempted",
+                    updateDTO.getRemarks());
         }
 
-        // 2. Handle statistics updates (removed WhatsApp)
+        // 2. Handle statistics updates
         List<String> statsChanges = processStatisticsUpdates(lead, updateDTO);
         changes.addAll(statsChanges);
 
-        // 3. Handle stage update (now only INTERESTED, NOT_INTERESTED, NORMAL)
+        // 3. Handle stage update
         if (updateDTO.getNewLeadStage() != null && updateDTO.getNewLeadStage() != lead.getLeadStage()) {
-            // Validate that the stage is one of the allowed values
             if (isValidLeadStage(updateDTO.getNewLeadStage())) {
                 changes.add("Stage changed from " + oldStage + " to " + updateDTO.getNewLeadStage());
                 leadHistoryService.recordStageChange(lead, employee, oldStage, updateDTO.getNewLeadStage().toString(),
-                        "Stage updated by employee");
+                        "Stage updated by employee: " + employee.getEmail());
                 lead.setLeadStage(updateDTO.getNewLeadStage());
             } else {
-                log.warn("Invalid lead stage attempted: {}", updateDTO.getNewLeadStage());
                 throw new IllegalArgumentException("Invalid lead stage. Allowed stages: INTERESTED, NOT_INTERESTED, NORMAL");
             }
         }
 
         // 4. Handle follow-up update
+        String oldFollowUpDate = lead.getNextFollowUpDate().toString();
+        String oldFollowUpDesc = lead.getNextFollowUp();
+
         if (updateDTO.getNextFollowUpDate() != null ||
                 (updateDTO.getNextFollowUpDescription() != null && !updateDTO.getNextFollowUpDescription().isEmpty())) {
             String followUpChange = processFollowUpUpdate(lead, updateDTO);
-            if (!followUpChange.isEmpty()) changes.add(followUpChange);
+            if (!followUpChange.isEmpty()) {
+                changes.add(followUpChange);
+                leadHistoryService.recordFollowUpUpdate(oldLead, lead, employee,
+                        oldFollowUpDate, lead.getNextFollowUpDate().toString(),
+                        oldFollowUpDesc, lead.getNextFollowUp());
+            }
         }
 
-        // 5. Handle conversion to customer (removed CLOSED stage reference)
+        // 5. Handle conversion to customer
         if (Boolean.TRUE.equals(updateDTO.getConvertToCustomer())) {
             changes.add("Lead marked as converted to customer");
             log.info("Lead {} converted to customer by employee {}", leadId, employeeEmail);
-            // Note: We don't change the stage automatically for conversion
-            // The admin can manually update the stage if needed
         }
 
         // 6. Update remarks if provided
@@ -100,16 +112,55 @@ public class EmployeeLeadServiceImpl implements EmployeeLeadService {
         // Save lead
         Lead savedLead = leadRepository.save(lead);
 
-        // Create single consolidated history entry for all changes
+        // Record detailed history if there are changes
         if (!changes.isEmpty()) {
-            String allChanges = String.join("; ", changes);
-            leadHistoryService.recordLeadUpdate(savedLead, employee, allChanges,
+            // Record detailed field-level changes
+            leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, employee,
                     "Consolidated lead update by employee: " + employee.getEmail());
-            log.info("Recorded consolidated history entry for lead {} with {} changes", leadId, changes.size());
+
+            // Send email notification to admin
+            String employeeRole = employee.getEmail().equals("redcircle0908@gmail.com") ? "ADMIN" : "EMPLOYEE";
+            emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
+                    employee.getFirstName() + " " + employee.getLastName(),
+                    employeeRole, changes);
+
+            log.info("Recorded detailed history and sent notification for lead {} with {} changes", leadId, changes.size());
         }
 
         log.info("Lead {} updated successfully with {} changes", leadId, changes.size());
         return mapToResponseDTO(savedLead);
+    }
+
+    private Lead copyLead(Lead original) {
+        if (original == null) return null;
+
+        return Lead.builder()
+                .id(original.getId())
+                .name(original.getName())
+                .email(original.getEmail())
+                .phoneNumber(original.getPhoneNumber())
+                .leadType(original.getLeadType())
+                .leadStage(original.getLeadStage())
+                .nextFollowUpDate(original.getNextFollowUpDate())
+                .remarks(original.getRemarks())
+                .nextFollowUp(original.getNextFollowUp())
+                .assignedEmployee(original.getAssignedEmployee())
+                .source(original.getSource())
+                .isActive(original.getIsActive())
+                .interestedService(original.getInterestedService())
+                .serviceSubcategory(original.getServiceSubcategory())
+                .serviceSubSubcategory(original.getServiceSubSubcategory())
+                .serviceDescription(original.getServiceDescription())
+                .callsMadeCount(original.getCallsMadeCount())
+                .meetingsBookedCount(original.getMeetingsBookedCount())
+                .meetingsDoneCount(original.getMeetingsDoneCount())
+                .updateCount(original.getUpdateCount())
+                .lastUpdatedBy(original.getLastUpdatedBy())
+                .lastContactDate(original.getLastContactDate())
+                .createdAt(original.getCreatedAt())
+                .updatedAt(original.getUpdatedAt())
+                .version(original.getVersion())
+                .build();
     }
 
     private String processContactMade(Lead lead, EmployeeLeadUpdateDTO updateDTO) {
@@ -118,16 +169,13 @@ public class EmployeeLeadServiceImpl implements EmployeeLeadService {
         if (updateDTO.getResponseMessage() != null && !updateDTO.getResponseMessage().isEmpty()) {
             String response = updateDTO.getResponseMessage().toLowerCase();
 
-            // Track calls made
             if (response.contains("call") || response.contains("phone")) {
                 lead.setCallsMadeCount(lead.getCallsMadeCount() + 1);
                 contactInfo.append("Phone call recorded. ");
             }
 
-            // Track response message
             contactInfo.append("Response: \"").append(updateDTO.getResponseMessage()).append("\". ");
 
-            // Auto-update lead stage based on response sentiment
             if (response.contains("interested") || response.contains("yes") || response.contains("want")) {
                 if (lead.getLeadStage() != LeadStage.INTERESTED) {
                     contactInfo.append("Lead marked as INTERESTED based on response. ");
@@ -147,30 +195,25 @@ public class EmployeeLeadServiceImpl implements EmployeeLeadService {
     private List<String> processStatisticsUpdates(Lead lead, EmployeeLeadUpdateDTO updateDTO) {
         List<String> statsChanges = new ArrayList<>();
 
-        // Track calls made
         if (Boolean.TRUE.equals(updateDTO.getCallsMade())) {
             lead.setCallsMadeCount(lead.getCallsMadeCount() + 1);
             statsChanges.add("Phone call made (Total calls: " + lead.getCallsMadeCount() + ")");
         }
 
-        // Track meeting booked
         if (Boolean.TRUE.equals(updateDTO.getMeetingBooked())) {
             lead.setMeetingsBookedCount(lead.getMeetingsBookedCount() + 1);
             statsChanges.add("Meeting booked (Total meetings booked: " + lead.getMeetingsBookedCount() + ")");
 
-            // Auto-update stage to INTERESTED if meeting is booked
             if (lead.getLeadStage() != LeadStage.INTERESTED) {
                 statsChanges.add("Stage automatically updated to INTERESTED (meeting booked)");
                 lead.setLeadStage(LeadStage.INTERESTED);
             }
         }
 
-        // Track meeting done
         if (Boolean.TRUE.equals(updateDTO.getMeetingDone())) {
             lead.setMeetingsDoneCount(lead.getMeetingsDoneCount() + 1);
             statsChanges.add("Meeting completed (Total meetings done: " + lead.getMeetingsDoneCount() + ")");
 
-            // Keep as INTERESTED if meeting was done successfully
             if (lead.getLeadStage() != LeadStage.INTERESTED) {
                 statsChanges.add("Stage updated to INTERESTED (meeting completed)");
                 lead.setLeadStage(LeadStage.INTERESTED);
@@ -201,7 +244,6 @@ public class EmployeeLeadServiceImpl implements EmployeeLeadService {
     }
 
     private boolean isValidLeadStage(LeadStage stage) {
-        // Validate that the stage is one of the allowed values
         return stage == LeadStage.INTERESTED ||
                 stage == LeadStage.NOT_INTERESTED ||
                 stage == LeadStage.NORMAL;
@@ -220,26 +262,19 @@ public class EmployeeLeadServiceImpl implements EmployeeLeadService {
         dto.setNextFollowUp(lead.getNextFollowUp());
         dto.setSource(lead.getSource());
         dto.setIsActive(lead.getIsActive());
-
-        // Statistics (removed WhatsApp count)
         dto.setCallsMadeCount(lead.getCallsMadeCount());
         dto.setMeetingsBookedCount(lead.getMeetingsBookedCount());
         dto.setMeetingsDoneCount(lead.getMeetingsDoneCount());
-
-        // Service-related fields
         dto.setInterestedService(lead.getInterestedService());
         dto.setServiceSubcategory(lead.getServiceSubcategory());
         dto.setServiceSubSubcategory(lead.getServiceSubSubcategory());
         dto.setServiceDescription(lead.getServiceDescription());
-
-        // Tracking fields
         dto.setCreatedAt(lead.getCreatedAt());
         dto.setUpdatedAt(lead.getUpdatedAt());
         dto.setUpdateCount(lead.getUpdateCount());
         dto.setLastUpdatedBy(lead.getLastUpdatedBy());
         dto.setLastContactDate(lead.getLastContactDate());
 
-        // Assigned employee details
         if (lead.getAssignedEmployee() != null) {
             EmployeeResponseDTO empDto = new EmployeeResponseDTO();
             empDto.setId(lead.getAssignedEmployee().getId());

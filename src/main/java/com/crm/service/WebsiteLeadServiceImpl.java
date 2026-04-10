@@ -9,7 +9,6 @@ import com.crm.exception.DuplicateResourceException;
 import com.crm.exception.ResourceNotFoundException;
 import com.crm.repository.EmployeeRepository;
 import com.crm.repository.LeadRepository;
-import com.crm.util.CryptoUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,6 +49,9 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
         Lead lead = buildLeadFromWebsiteDTO(websiteLeadDTO, defaultEmployee);
         Lead savedLead = leadRepository.save(lead);
 
+        // Record lead creation in history
+        leadHistoryService.recordLeadCreation(savedLead, defaultEmployee);
+
         emailService.sendWebsiteLeadNotification(websiteLeadDTO);
 
         log.info("Website lead saved successfully with ID: {}", savedLead.getId());
@@ -85,13 +87,17 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
         Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
 
+        // Create a copy of lead before changes for comparison
+        Lead oldLead = copyLead(lead);
         List<String> changes = new ArrayList<>();
 
+        // Track lead type change
         if (updateDTO.getLeadType() != null && updateDTO.getLeadType() != lead.getLeadType()) {
             changes.add("Lead Type changed from " + lead.getLeadType() + " to " + updateDTO.getLeadType());
             lead.setLeadType(updateDTO.getLeadType());
         }
 
+        // Track lead stage change
         if (updateDTO.getLeadStage() != null && updateDTO.getLeadStage() != lead.getLeadStage()) {
             String oldStage = lead.getLeadStage().toString();
             String newStage = updateDTO.getLeadStage().toString();
@@ -100,6 +106,7 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
             lead.setLeadStage(updateDTO.getLeadStage());
         }
 
+        // Track assigned employee change
         if (updateDTO.getAssignedEmployeeId() != null) {
             Employee newEmployee = employeeRepository.findById(updateDTO.getAssignedEmployeeId())
                     .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + updateDTO.getAssignedEmployeeId()));
@@ -118,19 +125,23 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
             }
         }
 
+        // Track remarks change
         if (updateDTO.getRemarks() != null && !updateDTO.getRemarks().equals(lead.getRemarks())) {
-            changes.add("Remarks updated");
+            changes.add("Remarks updated from '" + lead.getRemarks() + "' to '" + updateDTO.getRemarks() + "'");
             lead.setRemarks(updateDTO.getRemarks());
         }
 
+        // Track follow-up date change
         if (updateDTO.getNextFollowUpDate() != null && !updateDTO.getNextFollowUpDate().equals(lead.getNextFollowUpDate())) {
             changes.add("Follow-up date changed from " + lead.getNextFollowUpDate() +
                     " to " + updateDTO.getNextFollowUpDate());
             lead.setNextFollowUpDate(updateDTO.getNextFollowUpDate());
         }
 
+        // Track follow-up description change
         if (updateDTO.getNextFollowUp() != null && !updateDTO.getNextFollowUp().equals(lead.getNextFollowUp())) {
-            changes.add("Follow-up description updated");
+            changes.add("Follow-up description updated from '" + lead.getNextFollowUp() +
+                    "' to '" + updateDTO.getNextFollowUp() + "'");
             lead.setNextFollowUp(updateDTO.getNextFollowUp());
         }
 
@@ -139,9 +150,16 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
 
         Lead savedLead = leadRepository.save(lead);
 
+        // Record detailed history if there are changes
         if (!changes.isEmpty()) {
             String changesText = String.join("; ", changes);
-            leadHistoryService.recordLeadUpdate(savedLead, admin, changesText, "Website lead updated by admin");
+            leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, admin,
+                    "Website lead updated by admin: " + changesText);
+
+            // Send email notification to admin
+            emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
+                    admin.getFirstName() + " " + admin.getLastName(),
+                    "ADMIN", changes);
         }
 
         log.info("Website lead {} updated successfully with {} changes", id, changes.size());
@@ -151,11 +169,24 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
     @Override
     public void deleteWebsiteLead(Long id) {
         log.info("Soft deleting website lead with ID: {}", id);
+
         Lead lead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with ID: " + id));
+
+        Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        // Create a copy for history
+        Lead oldLead = copyLead(lead);
+
         lead.setIsActive(false);
         lead.setLastUpdatedBy("ADMIN");
-        leadRepository.save(lead);
+        Lead savedLead = leadRepository.save(lead);
+
+        // Record deletion in history
+        leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, admin,
+                "Website lead soft deleted by admin");
+
         log.info("Website lead {} soft deleted successfully", id);
     }
 
@@ -217,17 +248,31 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
         Employee newEmployee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + employeeId));
 
+        Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        // Create a copy for history
+        Lead oldLead = copyLead(lead);
+
         String oldEmployeeEmail = lead.getAssignedEmployee().getEmail();
         lead.setAssignedEmployee(newEmployee);
         lead.setLastUpdatedBy("ADMIN");
 
         Lead savedLead = leadRepository.save(lead);
 
-        Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
-                .orElseThrow(() -> new RuntimeException("Admin not found"));
         String changes = "Assigned employee changed from " + oldEmployeeEmail + " to " + newEmployee.getEmail();
-        leadHistoryService.recordLeadUpdate(savedLead, admin, changes, "Website lead reassigned by admin");
+        List<String> changesList = List.of(changes);
 
+        // Record assignment in history
+        leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, admin,
+                "Website lead reassigned by admin: " + changes);
+
+        // Send email notification to admin about the change
+        emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
+                admin.getFirstName() + " " + admin.getLastName(),
+                "ADMIN", changesList);
+
+        // Send assignment email to the new employee
         emailService.sendLeadAssignmentEmail(
                 newEmployee.getEmail(),
                 newEmployee.getFirstName() + " " + newEmployee.getLastName(),
@@ -261,6 +306,38 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
                 .updateCount(0)
                 .lastUpdatedBy("WEBSITE")
                 .assignedEmployee(defaultEmployee)
+                .build();
+    }
+
+    private Lead copyLead(Lead original) {
+        if (original == null) return null;
+
+        return Lead.builder()
+                .id(original.getId())
+                .name(original.getName())
+                .email(original.getEmail())
+                .phoneNumber(original.getPhoneNumber())
+                .leadType(original.getLeadType())
+                .leadStage(original.getLeadStage())
+                .nextFollowUpDate(original.getNextFollowUpDate())
+                .remarks(original.getRemarks())
+                .nextFollowUp(original.getNextFollowUp())
+                .assignedEmployee(original.getAssignedEmployee())
+                .source(original.getSource())
+                .isActive(original.getIsActive())
+                .interestedService(original.getInterestedService())
+                .serviceSubcategory(original.getServiceSubcategory())
+                .serviceSubSubcategory(original.getServiceSubSubcategory())
+                .serviceDescription(original.getServiceDescription())
+                .callsMadeCount(original.getCallsMadeCount())
+                .meetingsBookedCount(original.getMeetingsBookedCount())
+                .meetingsDoneCount(original.getMeetingsDoneCount())
+                .updateCount(original.getUpdateCount())
+                .lastUpdatedBy(original.getLastUpdatedBy())
+                .lastContactDate(original.getLastContactDate())
+                .createdAt(original.getCreatedAt())
+                .updatedAt(original.getUpdatedAt())
+                .version(original.getVersion())
                 .build();
     }
 

@@ -80,6 +80,8 @@ public class LeadServiceImpl implements LeadService {
         Lead existingLead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with ID: " + id));
 
+        // Create a copy of lead before changes for comparison
+        Lead oldLead = copyLead(existingLead);
         List<String> changes = new ArrayList<>();
 
         // Track and update each field
@@ -120,12 +122,12 @@ public class LeadServiceImpl implements LeadService {
         }
 
         if (leadUpdateDTO.getRemarks() != null && !leadUpdateDTO.getRemarks().equals(existingLead.getRemarks())) {
-            changes.add("Remarks updated");
+            changes.add("Remarks: '" + existingLead.getRemarks() + "' → '" + leadUpdateDTO.getRemarks() + "'");
             existingLead.setRemarks(leadUpdateDTO.getRemarks());
         }
 
         if (leadUpdateDTO.getNextFollowUp() != null && !leadUpdateDTO.getNextFollowUp().equals(existingLead.getNextFollowUp())) {
-            changes.add("Follow-up description updated");
+            changes.add("Follow-up description: '" + existingLead.getNextFollowUp() + "' → '" + leadUpdateDTO.getNextFollowUp() + "'");
             existingLead.setNextFollowUp(leadUpdateDTO.getNextFollowUp());
         }
 
@@ -149,15 +151,31 @@ public class LeadServiceImpl implements LeadService {
 
         // Update service-related fields
         if (leadUpdateDTO.getInterestedService() != null) {
-            existingLead.setInterestedService(leadUpdateDTO.getInterestedService());
+            if (!leadUpdateDTO.getInterestedService().equals(existingLead.getInterestedService())) {
+                changes.add("Interested Service: '" + (existingLead.getInterestedService() != null ? existingLead.getInterestedService().getDisplayName() : "Not set") +
+                        "' → '" + leadUpdateDTO.getInterestedService().getDisplayName() + "'");
+                existingLead.setInterestedService(leadUpdateDTO.getInterestedService());
+            }
         }
+
         if (leadUpdateDTO.getServiceSubcategory() != null) {
-            existingLead.setServiceSubcategory(leadUpdateDTO.getServiceSubcategory());
+            if (!leadUpdateDTO.getServiceSubcategory().equals(existingLead.getServiceSubcategory())) {
+                changes.add("Service Subcategory: '" + (existingLead.getServiceSubcategory() != null ? existingLead.getServiceSubcategory().getDisplayName() : "Not set") +
+                        "' → '" + leadUpdateDTO.getServiceSubcategory().getDisplayName() + "'");
+                existingLead.setServiceSubcategory(leadUpdateDTO.getServiceSubcategory());
+            }
         }
+
         if (leadUpdateDTO.getServiceSubSubcategory() != null) {
-            existingLead.setServiceSubSubcategory(leadUpdateDTO.getServiceSubSubcategory());
+            if (!leadUpdateDTO.getServiceSubSubcategory().equals(existingLead.getServiceSubSubcategory())) {
+                changes.add("Service Sub-subcategory: '" + (existingLead.getServiceSubSubcategory() != null ? existingLead.getServiceSubSubcategory().getDisplayName() : "Not set") +
+                        "' → '" + leadUpdateDTO.getServiceSubSubcategory().getDisplayName() + "'");
+                existingLead.setServiceSubSubcategory(leadUpdateDTO.getServiceSubSubcategory());
+            }
         }
-        if (leadUpdateDTO.getServiceDescription() != null) {
+
+        if (leadUpdateDTO.getServiceDescription() != null && !leadUpdateDTO.getServiceDescription().equals(existingLead.getServiceDescription())) {
+            changes.add("Service Description updated");
             existingLead.setServiceDescription(leadUpdateDTO.getServiceDescription());
         }
 
@@ -167,8 +185,17 @@ public class LeadServiceImpl implements LeadService {
         Lead updatedLead = leadRepository.save(existingLead);
 
         if (!changes.isEmpty()) {
-            String finalChanges = String.join("; ", changes);
-            leadHistoryService.recordLeadUpdate(updatedLead, currentUser, finalChanges, "Lead details updated by " + currentUser.getEmail());
+            // Record detailed field-level changes
+            leadHistoryService.recordDetailedLeadUpdate(oldLead, updatedLead, currentUser,
+                    "Lead details updated by admin: " + currentUser.getEmail());
+
+            // Send email notification to admin
+            String role = currentUser.getEmail().equals("redcircle0908@gmail.com") ? "ADMIN" : "EMPLOYEE";
+            emailService.sendLeadChangeNotificationToAdmin(oldLead, updatedLead,
+                    currentUser.getFirstName() + " " + currentUser.getLastName(),
+                    role, changes);
+
+            log.info("Recorded detailed history and sent notification for lead {} with {} changes", id, changes.size());
         }
 
         log.info("Lead updated successfully with ID: {}", id);
@@ -186,10 +213,16 @@ public class LeadServiceImpl implements LeadService {
         Lead lead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with ID: " + id));
 
-        leadHistoryService.recordLeadUpdate(lead, currentUser, "Lead marked as inactive", "Lead deleted by " + currentUser.getEmail());
+        // Create a copy for history
+        Lead oldLead = copyLead(lead);
+
         lead.setIsActive(false);
         lead.setLastUpdatedBy(currentUser.getEmail());
-        leadRepository.save(lead);
+        Lead savedLead = leadRepository.save(lead);
+
+        // Record deletion in history
+        leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, currentUser,
+                "Lead soft deleted by " + currentUser.getEmail());
 
         log.info("Lead soft deleted successfully with ID: {}", id);
     }
@@ -280,6 +313,8 @@ public class LeadServiceImpl implements LeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
+        // Create a copy for history
+        Lead oldLead = copyLead(lead);
         List<String> statsChanges = new ArrayList<>();
 
         if (Boolean.TRUE.equals(statisticsDTO.getCallsMade())) {
@@ -305,8 +340,12 @@ public class LeadServiceImpl implements LeadService {
 
         if (!statsChanges.isEmpty()) {
             String allChanges = String.join("; ", statsChanges);
-            leadHistoryService.recordStatisticsUpdate(updatedLead, currentUser, allChanges,
-                    "Statistics updated by " + currentUser.getEmail());
+            leadHistoryService.recordStatisticsUpdate(oldLead, updatedLead, currentUser, statsChanges);
+
+            // Send email notification for statistics update
+            emailService.sendLeadChangeNotificationToAdmin(oldLead, updatedLead,
+                    currentUser.getFirstName() + " " + currentUser.getLastName(),
+                    isAdmin ? "ADMIN" : "EMPLOYEE", statsChanges);
         }
 
         log.info("Statistics updated for lead {} by {}", id, currentUser.getEmail());
@@ -320,13 +359,10 @@ public class LeadServiceImpl implements LeadService {
 
         List<Lead> allLeads = leadRepository.findByIsActiveTrue();
 
-        // Statistics by lead type
         statistics.put("total_leads", (long) allLeads.size());
         statistics.put("hot_leads", allLeads.stream().filter(l -> l.getLeadType() == LeadType.HOT).count());
         statistics.put("warm_leads", allLeads.stream().filter(l -> l.getLeadType() == LeadType.WARM).count());
         statistics.put("cold_leads", allLeads.stream().filter(l -> l.getLeadType() == LeadType.COLD).count());
-
-        // Statistics by lead stage
         statistics.put("interested_leads", allLeads.stream().filter(l -> l.getLeadStage() == LeadStage.INTERESTED).count());
         statistics.put("not_interested_leads", allLeads.stream().filter(l -> l.getLeadStage() == LeadStage.NOT_INTERESTED).count());
         statistics.put("normal_leads", allLeads.stream().filter(l -> l.getLeadStage() == LeadStage.NORMAL).count());
@@ -360,6 +396,9 @@ public class LeadServiceImpl implements LeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
+        // Create a copy for history
+        Lead oldLead = copyLead(lead);
+
         String oldStage = lead.getLeadStage().toString();
         LeadStage newStage;
         try {
@@ -374,6 +413,12 @@ public class LeadServiceImpl implements LeadService {
 
         Lead savedLead = leadRepository.save(lead);
         leadHistoryService.recordStageChange(savedLead, employee, oldStage, stage, "Stage updated by " + employee.getEmail());
+
+        // Send email notification for stage change
+        List<String> changes = List.of("Stage changed from '" + oldStage + "' to '" + stage + "'");
+        emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
+                employee.getFirstName() + " " + employee.getLastName(),
+                "EMPLOYEE", changes);
 
         log.info("Stage updated for lead {} to {} by {}", id, newStage, employeeEmail);
         return mapToResponseDTO(savedLead);
@@ -393,6 +438,9 @@ public class LeadServiceImpl implements LeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
+        // Create a copy for history
+        Lead oldLead = copyLead(lead);
+
         String oldFollowUpDate = lead.getNextFollowUpDate().toString();
         String oldDescription = lead.getNextFollowUp();
         LocalDate newDate = LocalDate.parse(nextFollowUpDate, DateTimeFormatter.ISO_LOCAL_DATE);
@@ -403,7 +451,17 @@ public class LeadServiceImpl implements LeadService {
         lead.setLastUpdatedBy(employee.getEmail());
 
         Lead savedLead = leadRepository.save(lead);
-        leadHistoryService.recordFollowUpUpdate(savedLead, employee, oldFollowUpDate, nextFollowUpDate, oldDescription, nextFollowUpDescription);
+        leadHistoryService.recordFollowUpUpdate(oldLead, savedLead, employee,
+                oldFollowUpDate, nextFollowUpDate, oldDescription, nextFollowUpDescription);
+
+        // Send email notification for follow-up update
+        List<String> changes = List.of(
+                "Follow-up date changed from '" + oldFollowUpDate + "' to '" + nextFollowUpDate + "'",
+                "Follow-up description changed from '" + oldDescription + "' to '" + nextFollowUpDescription + "'"
+        );
+        emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
+                employee.getFirstName() + " " + employee.getLastName(),
+                "EMPLOYEE", changes);
 
         log.info("Follow-up updated for lead {} for date {} by {}", id, newDate, employeeEmail);
         return mapToResponseDTO(savedLead);
@@ -423,41 +481,40 @@ public class LeadServiceImpl implements LeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
+        // Create a copy for history
+        Lead oldLead = copyLead(lead);
         List<String> changes = new ArrayList<>();
         String oldStage = lead.getLeadStage().toString();
 
-        // Handle contact made
         if (Boolean.TRUE.equals(updateDTO.getContactMade())) {
             String contactInfo = processContactMade(lead, updateDTO);
             changes.add(contactInfo);
             lead.setLastContactDate(LocalDateTime.now());
+            leadHistoryService.recordContactMade(lead, employee, "Phone/Email",
+                    updateDTO.getResponseMessage() != null ? updateDTO.getResponseMessage() : "Contact attempted",
+                    updateDTO.getRemarks());
         }
 
-        // Handle statistics updates
         List<String> statsChanges = processStatisticsUpdates(lead, updateDTO);
         changes.addAll(statsChanges);
 
-        // Handle stage update
         if (updateDTO.getNewLeadStage() != null && updateDTO.getNewLeadStage() != lead.getLeadStage()) {
             changes.add("Stage changed from " + oldStage + " to " + updateDTO.getNewLeadStage());
             leadHistoryService.recordStageChange(lead, employee, oldStage, updateDTO.getNewLeadStage().toString(), "Stage updated by employee");
             lead.setLeadStage(updateDTO.getNewLeadStage());
         }
 
-        // Handle follow-up update
         if (updateDTO.getNextFollowUpDate() != null ||
                 (updateDTO.getNextFollowUpDescription() != null && !updateDTO.getNextFollowUpDescription().isEmpty())) {
             String followUpChange = processFollowUpUpdate(lead, updateDTO);
             changes.add(followUpChange);
         }
 
-        // Handle conversion to customer
         if (Boolean.TRUE.equals(updateDTO.getConvertToCustomer())) {
             changes.add("Lead converted to customer");
             log.info("Lead {} converted to customer by employee {}", id, employeeEmail);
         }
 
-        // Update remarks if provided
         if (updateDTO.getRemarks() != null && !updateDTO.getRemarks().isEmpty()) {
             changes.add("Remarks updated: " + updateDTO.getRemarks());
             lead.setRemarks(updateDTO.getRemarks());
@@ -468,12 +525,16 @@ public class LeadServiceImpl implements LeadService {
 
         Lead savedLead = leadRepository.save(lead);
 
-        // Create single consolidated history entry
         if (!changes.isEmpty()) {
             String allChanges = String.join("; ", changes);
-            leadHistoryService.recordLeadUpdate(savedLead, employee, allChanges,
+            leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, employee,
                     "Consolidated lead update by employee: " + employee.getEmail());
-            log.info("Recorded consolidated history entry for lead {} with {} changes", id, changes.size());
+
+            // Send email notification
+            String role = employee.getEmail().equals("redcircle0908@gmail.com") ? "ADMIN" : "EMPLOYEE";
+            emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
+                    employee.getFirstName() + " " + employee.getLastName(),
+                    role, changes);
         }
 
         log.info("Lead {} updated successfully with {} changes", id, changes.size());
@@ -532,6 +593,38 @@ public class LeadServiceImpl implements LeadService {
         }
 
         return followUpChange.toString();
+    }
+
+    private Lead copyLead(Lead original) {
+        if (original == null) return null;
+
+        return Lead.builder()
+                .id(original.getId())
+                .name(original.getName())
+                .email(original.getEmail())
+                .phoneNumber(original.getPhoneNumber())
+                .leadType(original.getLeadType())
+                .leadStage(original.getLeadStage())
+                .nextFollowUpDate(original.getNextFollowUpDate())
+                .remarks(original.getRemarks())
+                .nextFollowUp(original.getNextFollowUp())
+                .assignedEmployee(original.getAssignedEmployee())
+                .source(original.getSource())
+                .isActive(original.getIsActive())
+                .interestedService(original.getInterestedService())
+                .serviceSubcategory(original.getServiceSubcategory())
+                .serviceSubSubcategory(original.getServiceSubSubcategory())
+                .serviceDescription(original.getServiceDescription())
+                .callsMadeCount(original.getCallsMadeCount())
+                .meetingsBookedCount(original.getMeetingsBookedCount())
+                .meetingsDoneCount(original.getMeetingsDoneCount())
+                .updateCount(original.getUpdateCount())
+                .lastUpdatedBy(original.getLastUpdatedBy())
+                .lastContactDate(original.getLastContactDate())
+                .createdAt(original.getCreatedAt())
+                .updatedAt(original.getUpdatedAt())
+                .version(original.getVersion())
+                .build();
     }
 
     private Lead mapToEntity(LeadDTO dto, Employee assignedEmployee) {

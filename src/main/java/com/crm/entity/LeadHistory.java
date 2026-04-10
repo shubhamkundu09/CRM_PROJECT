@@ -32,8 +32,14 @@ public class LeadHistory {
     @Column(nullable = false)
     private String action; // CREATE, UPDATE, STAGE_CHANGE, STATISTICS_UPDATE, FOLLOWUP_UPDATE, CONTACT_MADE
 
+    @Column(length = 4000)
+    private String changes; // Detailed description of changes
+
     @Column(length = 2000)
-    private String changes; // JSON or text description of changes
+    private String oldValues; // Previous values in JSON format
+
+    @Column(length = 2000)
+    private String newValues; // New values in JSON format
 
     @Column(length = 1000)
     private String remarks;
