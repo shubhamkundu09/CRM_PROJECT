@@ -1,12 +1,14 @@
 package com.crm.service;
 
 import com.crm.dto.*;
+import com.crm.entity.Contact;
 import com.crm.entity.Employee;
 import com.crm.entity.Lead;
 import com.crm.entity.LeadStage;
 import com.crm.entity.LeadType;
 import com.crm.exception.DuplicateResourceException;
 import com.crm.exception.ResourceNotFoundException;
+import com.crm.repository.ContactRepository;
 import com.crm.repository.EmployeeRepository;
 import com.crm.repository.LeadRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
     private final EmployeeRepository employeeRepository;
     private final EmailService emailService;
     private final LeadHistoryService leadHistoryService;
+    private final ContactRepository contactRepository;
 
     private static final String ADMIN_EMAIL = "redcircle0908@gmail.com";
     private static final String WEBSITE_SOURCE = "Website Lead Form";
@@ -39,22 +42,38 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
     public LeadResponseDTO submitWebsiteLead(WebsiteLeadDTO websiteLeadDTO) {
         log.info("Processing website lead submission from: {}", websiteLeadDTO.getEmail());
 
-        if (leadRepository.existsByEmail(websiteLeadDTO.getEmail())) {
-            throw new DuplicateResourceException("A lead with this email already exists. Our team will contact you shortly.");
+        // Get or create contact
+        Contact contact = contactRepository.findByEmailIgnoreCaseOrPhoneNumber(
+                websiteLeadDTO.getEmail(),
+                websiteLeadDTO.getPhoneNumber()
+        ).orElse(null);
+
+        if (contact == null) {
+            contact = Contact.builder()
+                    .name(websiteLeadDTO.getName())
+                    .email(websiteLeadDTO.getEmail().toLowerCase())
+                    .phoneNumber(websiteLeadDTO.getPhoneNumber())
+                    .isActive(true)
+                    .build();
+            contact = contactRepository.save(contact);
+            log.info("Created new contact for website lead with ID: {}", contact.getId());
+        } else {
+            log.info("Found existing contact for website lead with ID: {}", contact.getId());
         }
 
         Employee defaultEmployee = employeeRepository.findByEmail(ADMIN_EMAIL)
                 .orElseThrow(() -> new RuntimeException("Admin user not found. Please ensure admin exists."));
 
         Lead lead = buildLeadFromWebsiteDTO(websiteLeadDTO, defaultEmployee);
+        lead.setContact(contact);
+
         Lead savedLead = leadRepository.save(lead);
 
-        // Record lead creation in history
         leadHistoryService.recordLeadCreation(savedLead, defaultEmployee);
 
         emailService.sendWebsiteLeadNotification(websiteLeadDTO);
 
-        log.info("Website lead saved successfully with ID: {}", savedLead.getId());
+        log.info("Website lead saved successfully with ID: {} for contact ID: {}", savedLead.getId(), contact.getId());
         return mapToResponseDTO(savedLead);
     }
 
@@ -87,17 +106,14 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
         Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
 
-        // Create a copy of lead before changes for comparison
         Lead oldLead = copyLead(lead);
         List<String> changes = new ArrayList<>();
 
-        // Track lead type change
         if (updateDTO.getLeadType() != null && updateDTO.getLeadType() != lead.getLeadType()) {
             changes.add("Lead Type changed from " + lead.getLeadType() + " to " + updateDTO.getLeadType());
             lead.setLeadType(updateDTO.getLeadType());
         }
 
-        // Track lead stage change
         if (updateDTO.getLeadStage() != null && updateDTO.getLeadStage() != lead.getLeadStage()) {
             String oldStage = lead.getLeadStage().toString();
             String newStage = updateDTO.getLeadStage().toString();
@@ -106,7 +122,6 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
             lead.setLeadStage(updateDTO.getLeadStage());
         }
 
-        // Track assigned employee change
         if (updateDTO.getAssignedEmployeeId() != null) {
             Employee newEmployee = employeeRepository.findById(updateDTO.getAssignedEmployeeId())
                     .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + updateDTO.getAssignedEmployeeId()));
@@ -125,20 +140,17 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
             }
         }
 
-        // Track remarks change
         if (updateDTO.getRemarks() != null && !updateDTO.getRemarks().equals(lead.getRemarks())) {
             changes.add("Remarks updated from '" + lead.getRemarks() + "' to '" + updateDTO.getRemarks() + "'");
             lead.setRemarks(updateDTO.getRemarks());
         }
 
-        // Track follow-up date change
         if (updateDTO.getNextFollowUpDate() != null && !updateDTO.getNextFollowUpDate().equals(lead.getNextFollowUpDate())) {
             changes.add("Follow-up date changed from " + lead.getNextFollowUpDate() +
                     " to " + updateDTO.getNextFollowUpDate());
             lead.setNextFollowUpDate(updateDTO.getNextFollowUpDate());
         }
 
-        // Track follow-up description change
         if (updateDTO.getNextFollowUp() != null && !updateDTO.getNextFollowUp().equals(lead.getNextFollowUp())) {
             changes.add("Follow-up description updated from '" + lead.getNextFollowUp() +
                     "' to '" + updateDTO.getNextFollowUp() + "'");
@@ -150,13 +162,11 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
 
         Lead savedLead = leadRepository.save(lead);
 
-        // Record detailed history if there are changes
         if (!changes.isEmpty()) {
             String changesText = String.join("; ", changes);
             leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, admin,
                     "Website lead updated by admin: " + changesText);
 
-            // Send email notification to admin
             emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
                     admin.getFirstName() + " " + admin.getLastName(),
                     "ADMIN", changes);
@@ -176,14 +186,12 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
         Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
 
-        // Create a copy for history
         Lead oldLead = copyLead(lead);
 
         lead.setIsActive(false);
         lead.setLastUpdatedBy("ADMIN");
         Lead savedLead = leadRepository.save(lead);
 
-        // Record deletion in history
         leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, admin,
                 "Website lead soft deleted by admin");
 
@@ -251,7 +259,6 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
         Employee admin = employeeRepository.findByEmail(ADMIN_EMAIL)
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
 
-        // Create a copy for history
         Lead oldLead = copyLead(lead);
 
         String oldEmployeeEmail = lead.getAssignedEmployee().getEmail();
@@ -263,16 +270,13 @@ public class WebsiteLeadServiceImpl implements WebsiteLeadService {
         String changes = "Assigned employee changed from " + oldEmployeeEmail + " to " + newEmployee.getEmail();
         List<String> changesList = List.of(changes);
 
-        // Record assignment in history
         leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, admin,
                 "Website lead reassigned by admin: " + changes);
 
-        // Send email notification to admin about the change
         emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
                 admin.getFirstName() + " " + admin.getLastName(),
                 "ADMIN", changesList);
 
-        // Send assignment email to the new employee
         emailService.sendLeadAssignmentEmail(
                 newEmployee.getEmail(),
                 newEmployee.getFirstName() + " " + newEmployee.getLastName(),

@@ -7,400 +7,71 @@
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg: #0a0e1a;
-            --surface: #111827;
-            --surface2: #1a2332;
-            --surface3: #1f2a3c;
-            --border: #1f2a3c;
-            --border2: #2d3a4e;
-            --accent: #3b82f6;
-            --accent2: #8b5cf6;
-            --accent3: #10b981;
-            --accent4: #f59e0b;
-            --accent5: #ef4444;
-            --text: #f1f5f9;
-            --text2: #94a3b8;
-            --text3: #64748b;
-            --hot: #ef4444;
-            --warm: #f59e0b;
-            --cold: #60a5fa;
-            --interested: #10b981;
-            --not-interested: #ef4444;
-            --normal: #8b5cf6;
-            --sidebar-w: 280px;
-            --radius: 16px;
-            --radius-sm: 10px;
-            --radius-xs: 6px;
+            --bg: #0a0e1a; --surface: #111827; --surface2: #1a2332; --surface3: #1f2a3c;
+            --border: #1f2a3c; --border2: #2d3a4e; --accent: #3b82f6; --accent2: #8b5cf6;
+            --accent3: #10b981; --accent4: #f59e0b; --accent5: #ef4444;
+            --text: #f1f5f9; --text2: #94a3b8; --text3: #64748b;
+            --hot: #ef4444; --warm: #f59e0b; --cold: #60a5fa;
+            --interested: #10b981; --not-interested: #ef4444; --normal: #8b5cf6;
+            --sidebar-w: 280px; --radius: 16px; --radius-sm: 10px; --radius-xs: 6px;
             --shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
             --glow: 0 0 30px rgba(59,130,246,0.2);
         }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--surface2); }
         ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-        /* Login Page */
-        #login-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-grid {
-            display: grid;
-            grid-template-columns: 1fr 480px;
-            min-height: 100vh;
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .login-left {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 60px;
-            background: radial-gradient(circle at 0% 0%, rgba(59,130,246,0.08) 0%, transparent 70%);
-            border-right: 1px solid var(--border);
-        }
-
-        .login-right {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 48px;
-            background: var(--surface);
-        }
-
-        .login-box {
-            width: 100%;
-            max-width: 400px;
-        }
-
-        /* Buttons */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-            font-family: inherit;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59,130,246,0.4);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-outline:hover {
-            background: var(--surface2);
-            border-color: var(--accent);
-        }
-
-        .btn-danger {
-            background: rgba(239,68,68,0.15);
-            color: var(--hot);
-            border: 1px solid rgba(239,68,68,0.3);
-        }
-
-        .btn-danger:hover {
-            background: rgba(239,68,68,0.25);
-        }
-
-        .btn-success {
-            background: rgba(16,185,129,0.15);
-            color: var(--accent3);
-            border: 1px solid rgba(16,185,129,0.3);
-        }
-
-        .btn-warning {
-            background: rgba(245,158,11,0.15);
-            color: var(--warm);
-            border: 1px solid rgba(245,158,11,0.3);
-        }
-
-        .btn-purple {
-            background: rgba(139,92,246,0.15);
-            color: var(--accent2);
-            border: 1px solid rgba(139,92,246,0.3);
-        }
-
-        .btn-info {
-            background: rgba(59,130,246,0.15);
-            color: var(--accent);
-            border: 1px solid rgba(59,130,246,0.3);
-        }
-
-        .btn-sm {
-            padding: 7px 14px;
-            font-size: 12px;
-        }
-
-        .btn-xs {
-            padding: 4px 10px;
-            font-size: 11px;
-            border-radius: var(--radius-xs);
-        }
-
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text2);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-control {
-            width: 100%;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text);
-            padding: 11px 15px;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .form-control:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-        }
-
-        select.form-control {
-            cursor: pointer;
-        }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            transition: all 0.2s;
-        }
-
-        .card-header {
-            padding: 18px 22px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .card-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-body {
-            padding: 22px;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 24px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.2s;
-        }
-
-        .stat-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .stat-value {
-            font-family: 'Syne', sans-serif;
-            font-size: 32px;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 6px;
-            background: linear-gradient(135deg, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text2);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Lead Cards */
-        .leads-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 18px;
-        }
-
-        .lead-card {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .lead-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--accent);
-            box-shadow: var(--glow);
-        }
-
-        .lead-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 12px;
-        }
-
-        .lead-card-name {
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        .lead-card-detail {
-            font-size: 12px;
-            color: var(--text2);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .lead-card-stats {
-            display: flex;
-            margin: 14px 0;
-            background: var(--surface3);
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-        }
-
-        .lead-card-stat {
-            flex: 1;
-            padding: 10px 0;
-            text-align: center;
-            border-right: 1px solid var(--border);
-        }
-
-        .lead-card-stat:last-child {
-            border-right: none;
-        }
-
-        .lead-card-stat .number {
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--accent3);
-        }
-
-        .lead-card-stat .label {
-            font-size: 10px;
-            color: var(--text2);
-            margin-top: 3px;
-        }
-
-        .lead-card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-            font-size: 11px;
-            color: var(--text2);
-        }
-
-        .lead-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
-        }
-
-        /* Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
+        #login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%); position: relative; overflow: hidden; }
+        .login-grid { display: grid; grid-template-columns: 1fr 480px; min-height: 100vh; width: 100%; max-width: 1400px; margin: 0 auto; }
+        .login-left { display: flex; align-items: center; justify-content: center; padding: 60px; background: radial-gradient(circle at 0% 0%, rgba(59,130,246,0.08) 0%, transparent 70%); border-right: 1px solid var(--border); }
+        .login-right { display: flex; align-items: center; justify-content: center; padding: 60px 48px; background: var(--surface); }
+        .login-box { width: 100%; max-width: 400px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s ease; white-space: nowrap; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { background: var(--surface2); border-color: var(--accent); }
+        .btn-danger { background: rgba(239,68,68,0.15); color: var(--hot); border: 1px solid rgba(239,68,68,0.3); }
+        .btn-danger:hover { background: rgba(239,68,68,0.25); }
+        .btn-success { background: rgba(16,185,129,0.15); color: var(--accent3); border: 1px solid rgba(16,185,129,0.3); }
+        .btn-warning { background: rgba(245,158,11,0.15); color: var(--warm); border: 1px solid rgba(245,158,11,0.3); }
+        .btn-purple { background: rgba(139,92,246,0.15); color: var(--accent2); border: 1px solid rgba(139,92,246,0.3); }
+        .btn-info { background: rgba(59,130,246,0.15); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+        .btn-sm { padding: 7px 14px; font-size: 12px; }
+        .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: var(--radius-xs); }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-control { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 11px 15px; font-size: 14px; outline: none; transition: all 0.2s; font-family: inherit; }
+        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        select.form-control { cursor: pointer; }
+        textarea.form-control { resize: vertical; min-height: 80px; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: all 0.2s; }
+        .card-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .card-body { padding: 22px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; position: relative; overflow: hidden; transition: all 0.2s; }
+        .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 6px; background: linear-gradient(135deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .leads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px; }
+        .lead-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.2s; }
+        .lead-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--glow); }
+        .lead-card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .lead-card-name { font-weight: 700; font-size: 16px; }
+        .lead-card-detail { font-size: 12px; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .lead-card-stats { display: flex; margin: 14px 0; background: var(--surface3); border-radius: var(--radius-sm); overflow: hidden; }
+        .lead-card-stat { flex: 1; padding: 10px 0; text-align: center; border-right: 1px solid var(--border); }
+        .lead-card-stat:last-child { border-right: none; }
+        .lead-card-stat .number { font-weight: 700; font-size: 18px; color: var(--accent3); }
+        .lead-card-stat .label { font-size: 10px; color: var(--text2); margin-top: 3px; }
+        .lead-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 11px; color: var(--text2); }
+        .lead-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+        .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
         .badge-hot { background: rgba(239,68,68,0.15); color: var(--hot); }
         .badge-warm { background: rgba(245,158,11,0.15); color: var(--warm); }
         .badge-cold { background: rgba(96,165,250,0.15); color: var(--cold); }
@@ -417,654 +88,100 @@
         .badge-stage { background: rgba(139,92,246,0.2); color: var(--accent2); }
         .badge-contact { background: rgba(245,158,11,0.2); color: var(--warm); }
         .badge-stat { background: rgba(96,165,250,0.2); color: var(--cold); }
-
-        /* Tables */
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            padding: 14px 16px;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text3);
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 14px 16px;
-            font-size: 13px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        tbody tr:hover {
-            background: rgba(59,130,246,0.03);
-        }
-
-        /* Filter Bar */
-        .filter-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .search-wrap {
-            position: relative;
-            flex: 1;
-            min-width: 240px;
-        }
-
-        .search-wrap i {
-            position: absolute;
-            left: 13px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text3);
-            font-size: 13px;
-        }
-
-        .search-input {
-            width: 100%;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text);
-            padding: 10px 14px 10px 38px;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .search-input:focus {
-            border-color: var(--accent);
-        }
-
-        .select-filter {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text);
-            padding: 10px 14px;
-            font-size: 13px;
-            cursor: pointer;
-            outline: none;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: var(--sidebar-w);
-            height: 100vh;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            z-index: 100;
-        }
-
-        .sidebar-logo {
-            padding: 24px 22px 20px;
-            font-family: 'Syne', sans-serif;
-            font-size: 20px;
-            font-weight: 800;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .sidebar-logo span {
-            color: var(--accent);
-        }
-
-        .sidebar-user {
-            padding: 16px 18px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .user-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 18px;
-        }
-
-        .user-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .user-role {
-            font-size: 11px;
-            color: var(--text2);
-            margin-top: 2px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 11px 18px;
-            color: var(--text2);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            margin: 3px 10px;
-            border-radius: var(--radius-sm);
-            transition: all 0.2s;
-        }
-
-        .nav-item:hover {
-            color: var(--text);
-            background: var(--surface2);
-        }
-
-        .nav-item.active {
-            color: var(--accent);
-            background: linear-gradient(90deg, rgba(59,130,246,0.12) 0%, transparent 100%);
-            font-weight: 600;
-        }
-
-        .nav-item i {
-            width: 20px;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: var(--sidebar-w);
-            padding: 28px 36px;
-            min-height: 100vh;
-        }
-
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 28px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .page-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .page-sub {
-            font-size: 13px;
-            color: var(--text2);
-            margin-top: 4px;
-        }
-
-        /* Modals */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
-            padding: 20px;
-        }
-
-        .modal-overlay.open {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal {
-            background: var(--surface);
-            border: 1px solid var(--border2);
-            border-radius: 20px;
-            width: 100%;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow-y: auto;
-            transform: scale(0.96);
-            transition: transform 0.25s ease;
-        }
-
-        .modal-overlay.open .modal {
-            transform: scale(1);
-        }
-
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 14px 16px; font-size: 11px; font-weight: 700; color: var(--text3); text-align: left; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr:hover { background: rgba(59,130,246,0.03); }
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .search-wrap { position: relative; flex: 1; min-width: 240px; }
+        .search-wrap i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+        .search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 10px 14px 10px 38px; font-size: 13px; outline: none; }
+        .search-input:focus { border-color: var(--accent); }
+        .select-filter { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 10px 14px; font-size: 13px; cursor: pointer; outline: none; }
+        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; z-index: 100; }
+        .sidebar-logo { padding: 24px 22px 20px; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; border-bottom: 1px solid var(--border); }
+        .sidebar-logo span { color: var(--accent); }
+        .sidebar-user { padding: 16px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+        .user-avatar { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+        .user-name { font-weight: 600; font-size: 14px; }
+        .user-role { font-size: 11px; color: var(--text2); margin-top: 2px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 18px; color: var(--text2); cursor: pointer; font-size: 13px; font-weight: 500; margin: 3px 10px; border-radius: var(--radius-sm); transition: all 0.2s; }
+        .nav-item:hover { color: var(--text); background: var(--surface2); }
+        .nav-item.active { color: var(--accent); background: linear-gradient(90deg, rgba(59,130,246,0.12) 0%, transparent 100%); font-weight: 600; }
+        .nav-item i { width: 20px; }
+        .main-content { margin-left: var(--sidebar-w); padding: 28px 36px; min-height: 100vh; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+        .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+        .page-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; padding: 20px; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; transform: scale(0.96); transition: transform 0.25s ease; }
+        .modal-overlay.open .modal { transform: scale(1); }
         .modal-lg { max-width: 900px; }
         .modal-sm { max-width: 480px; }
         .modal-xl { max-width: 1100px; }
-
-        .modal-header {
-            padding: 24px 28px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--text2);
-            cursor: pointer;
-            font-size: 20px;
-            padding: 8px;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-
-        .modal-close:hover {
-            background: var(--surface2);
-            color: var(--text);
-        }
-
-        .modal-body {
-            padding: 24px 28px;
-        }
-
-        .modal-footer {
-            padding: 0 28px 24px;
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-
-        /* Form Grid */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-        }
-
-        .form-grid .col-span-2 {
-            grid-column: span 2;
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 6px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 22px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text2);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -1px;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-        }
-
-        .tab-panel {
-            display: block;
-        }
-
-        /* Update Sections */
-        .update-section {
-            background: var(--surface2);
-            border-radius: var(--radius-sm);
-            padding: 18px;
-            margin-bottom: 18px;
-        }
-
-        .update-section-title {
-            font-weight: 600;
-            margin-bottom: 14px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .checkbox-grid {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .checkbox-item input {
-            cursor: pointer;
-        }
-
-        /* Info Grid */
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .info-item {
-            padding: 12px;
-            background: var(--surface2);
-            border-radius: var(--radius-sm);
-        }
-
-        .info-label {
-            font-size: 11px;
-            color: var(--text2);
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .info-value {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        /* History Timeline - Enhanced */
-        .history-timeline {
-            position: relative;
-            padding: 0;
-        }
-
-        .history-item {
-            position: relative;
-            background: var(--surface2);
-            border-radius: var(--radius-sm);
-            margin-bottom: 20px;
-            border-left: 3px solid var(--accent);
-            overflow: hidden;
-            transition: all 0.2s;
-        }
-
-        .history-item:hover {
-            transform: translateX(4px);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .history-header {
-            padding: 16px 20px;
-            background: var(--surface3);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .history-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .history-time {
-            font-size: 12px;
-            color: var(--text2);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .history-time i {
-            font-size: 12px;
-        }
-
-        .history-body {
-            padding: 16px 20px;
-        }
-
-        .history-changes-list {
-            margin-top: 12px;
-        }
-
-        .change-item {
-            background: var(--surface);
-            border-radius: var(--radius-xs);
-            padding: 12px;
-            margin-bottom: 8px;
-            border-left: 2px solid var(--accent3);
-        }
-
-        .change-field {
-            font-weight: 700;
-            font-size: 12px;
-            color: var(--accent);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .change-values {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            font-size: 12px;
-        }
-
-        .old-value {
-            color: var(--hot);
-            text-decoration: line-through;
-        }
-
-        .new-value {
-            color: var(--accent3);
-            font-weight: 500;
-        }
-
-        .arrow-icon {
-            color: var(--text3);
-            font-size: 12px;
-        }
-
-        .history-remarks {
-            margin-top: 12px;
-            padding: 10px;
-            background: rgba(59,130,246,0.08);
-            border-radius: var(--radius-xs);
-            font-size: 12px;
-            color: var(--text2);
-            font-style: italic;
-        }
-
-        .history-remarks i {
-            margin-right: 6px;
-            color: var(--accent);
-        }
-
-        /* Filter chips */
-        .filter-chips {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .filter-chip {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .filter-chip:hover {
-            border-color: var(--accent);
-        }
-
-        .filter-chip.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-
-        /* Export button */
-        .btn-export {
-            background: rgba(16,185,129,0.15);
-            color: var(--accent3);
-            border: 1px solid rgba(16,185,129,0.3);
-        }
-
-        /* Sections */
-        .section {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Empty & Loading States */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text2);
-        }
-
-        .loading-state {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 60px;
-            gap: 12px;
-            color: var(--text2);
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.65s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Toast Notifications */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .toast {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInRight 0.3s ease;
-            font-size: 13px;
-            min-width: 280px;
-            box-shadow: var(--shadow-sm);
-        }
-
+        .modal-header { padding: 24px 28px 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; padding: 8px; border-radius: 8px; transition: all 0.2s; }
+        .modal-close:hover { background: var(--surface2); color: var(--text); }
+        .modal-body { padding: 24px 28px; }
+        .modal-footer { padding: 0 28px 24px; display: flex; gap: 12px; justify-content: flex-end; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .form-grid .col-span-2 { grid-column: span 2; }
+        .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+        .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-panel { display: block; }
+        .update-section { background: var(--surface2); border-radius: var(--radius-sm); padding: 18px; margin-bottom: 18px; }
+        .update-section-title { font-weight: 600; margin-bottom: 14px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .checkbox-grid { display: flex; gap: 16px; flex-wrap: wrap; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+        .checkbox-item input { cursor: pointer; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .info-item { padding: 12px; background: var(--surface2); border-radius: var(--radius-sm); }
+        .info-label { font-size: 11px; color: var(--text2); text-transform: uppercase; margin-bottom: 6px; }
+        .info-value { font-weight: 600; font-size: 14px; }
+        .contact-card { background: linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 20px; border-left: 3px solid var(--accent); }
+        .contact-card h4 { margin-bottom: 12px; color: var(--accent); }
+        .history-timeline { position: relative; padding: 0; }
+        .history-item { position: relative; background: var(--surface2); border-radius: var(--radius-sm); margin-bottom: 20px; border-left: 3px solid var(--accent); overflow: hidden; transition: all 0.2s; }
+        .history-item:hover { transform: translateX(4px); box-shadow: var(--shadow-sm); }
+        .history-header { padding: 16px 20px; background: var(--surface3); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border); }
+        .history-badge { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .history-time { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+        .history-body { padding: 16px 20px; }
+        .history-changes-list { margin-top: 12px; }
+        .change-item { background: var(--surface); border-radius: var(--radius-xs); padding: 12px; margin-bottom: 8px; border-left: 2px solid var(--accent3); }
+        .change-field { font-weight: 700; font-size: 12px; color: var(--accent); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .change-values { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 12px; }
+        .old-value { color: var(--hot); text-decoration: line-through; }
+        .new-value { color: var(--accent3); font-weight: 500; }
+        .arrow-icon { color: var(--text3); font-size: 12px; }
+        .history-remarks { margin-top: 12px; padding: 10px; background: rgba(59,130,246,0.08); border-radius: var(--radius-xs); font-size: 12px; color: var(--text2); font-style: italic; }
+        .filter-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .filter-chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+        .filter-chip:hover { border-color: var(--accent); }
+        .filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+        .section { display: none; animation: fadeIn 0.3s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+        .loading-state { display: flex; align-items: center; justify-content: center; padding: 60px; gap: 12px; color: var(--text2); }
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 12px; animation: slideInRight 0.3s ease; font-size: 13px; min-width: 280px; box-shadow: var(--shadow-sm); }
         .toast.success { border-left: 3px solid var(--accent3); }
         .toast.error { border-left: 3px solid var(--hot); }
         .toast.warning { border-left: 3px solid var(--warm); }
         .toast.info { border-left: 3px solid var(--accent); }
-
-        @keyframes slideInRight {
-            from { transform: translateX(110%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideOut {
-            to { transform: translateX(110%); opacity: 0; }
-        }
-
-        /* Password Strength */
-        .pass-strength {
-            height: 3px;
-            border-radius: 3px;
-            background: var(--border);
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .pass-strength-bar {
-            height: 100%;
-            width: 0;
-            transition: width 0.3s;
-            background: linear-gradient(90deg, var(--hot), var(--warm), var(--accent3));
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
-            .main-content { margin-left: 0; padding: 20px; }
-            .form-grid { grid-template-columns: 1fr; }
-            .form-grid .col-span-2 { grid-column: span 1; }
-        }
-
-        @media (max-width: 768px) {
-            .login-grid { grid-template-columns: 1fr; }
-            .login-left { display: none; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .leads-grid { grid-template-columns: 1fr; }
-            .info-grid { grid-template-columns: 1fr; }
-            .change-values { flex-direction: column; gap: 6px; align-items: flex-start; }
-        }
+        @keyframes slideInRight { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { to { transform: translateX(110%); opacity: 0; } }
+        .pass-strength { height: 3px; border-radius: 3px; background: var(--border); overflow: hidden; margin-top: 8px; }
+        .pass-strength-bar { height: 100%; width: 0; transition: width 0.3s; background: linear-gradient(90deg, var(--hot), var(--warm), var(--accent3)); }
+        @media (max-width: 1024px) { .sidebar { transform: translateX(-100%); transition: transform 0.3s; } .main-content { margin-left: 0; padding: 20px; } .form-grid { grid-template-columns: 1fr; } .form-grid .col-span-2 { grid-column: span 1; } }
+        @media (max-width: 768px) { .login-grid { grid-template-columns: 1fr; } .login-left { display: none; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .leads-grid { grid-template-columns: 1fr; } .info-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -1196,6 +313,39 @@
                         <tr><th>Employee</th><th>Code</th><th>Department</th><th>Position</th><th>Phone</th><th>Joined</th><th>Status</th><th>Actions</th></tr>
                         </thead>
                         <tbody id="employees-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CONTACTS MANAGEMENT -->
+        <div id="section-contacts" class="section">
+            <div class="topbar">
+                <div>
+                    <div class="page-title"><i class="fas fa-address-book"></i> Contacts</div>
+                    <div class="page-sub" id="contacts-count-sub"></div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openCreateContact()"><i class="fas fa-plus"></i> Add Contact</button>
+            </div>
+            <div class="filter-bar">
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" id="contacts-search" placeholder="Search by name, email or phone..." oninput="filterContacts()">
+                </div>
+                <select class="select-filter" id="contacts-status-filter" onchange="filterContacts()">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="loadContacts()"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Leads</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="contacts-table-body"></tbody>
                     </table>
                 </div>
             </div>
@@ -1430,6 +580,8 @@
 </div>
 
 <!-- MODALS -->
+
+<!-- Lead Modal -->
 <div class="modal-overlay" id="lead-modal">
     <div class="modal modal-lg">
         <div class="modal-header">
@@ -1460,6 +612,7 @@
     </div>
 </div>
 
+<!-- Employee Modal -->
 <div class="modal-overlay" id="employee-modal">
     <div class="modal modal-lg">
         <div class="modal-header">
@@ -1489,6 +642,44 @@
     </div>
 </div>
 
+<!-- Contact Modal -->
+<div class="modal-overlay" id="contact-modal">
+    <div class="modal modal-md">
+        <div class="modal-header">
+            <div class="modal-title" id="contact-modal-title">Add Contact</div>
+            <button class="modal-close" onclick="closeModal('contact-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="contact-form" onsubmit="handleContactSubmit(event)">
+                <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-control" id="contact-name" required></div>
+                <div class="form-group"><label class="form-label">Email *</label><input type="email" class="form-control" id="contact-email" required></div>
+                <div class="form-group"><label class="form-label">Phone *</label><input type="tel" class="form-control" id="contact-phone" maxlength="10" pattern="[0-9]{10}" required></div>
+                <div class="form-group"><label class="form-label">Address</label><textarea class="form-control" id="contact-address" rows="2"></textarea></div>
+                <input type="hidden" id="contact-id">
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('contact-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="document.getElementById('contact-form').requestSubmit()"><i class="fas fa-save"></i> Save Contact</button>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Detail Modal -->
+<div class="modal-overlay" id="contact-detail-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <div class="modal-title">Contact Details</div>
+            <button class="modal-close" onclick="closeModal('contact-detail-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="contact-detail-content"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('contact-detail-modal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
 <div class="modal-overlay" id="reset-pass-modal">
     <div class="modal modal-sm">
         <div class="modal-header">
@@ -1506,6 +697,7 @@
     </div>
 </div>
 
+<!-- Lead Detail Modal with Contact Information -->
 <div class="modal-overlay" id="lead-detail-modal">
     <div class="modal modal-lg">
         <div class="modal-header">
@@ -1519,6 +711,7 @@
     </div>
 </div>
 
+<!-- Lead Update Modal -->
 <div class="modal-overlay" id="lead-update-modal">
     <div class="modal modal-lg">
         <div class="modal-header">
@@ -1581,6 +774,7 @@
     </div>
 </div>
 
+<!-- Website Lead Update Modal -->
 <div class="modal-overlay" id="website-lead-update-modal">
     <div class="modal">
         <div class="modal-header">
@@ -1603,25 +797,18 @@
     </div>
 </div>
 
-<!-- ENHANCED LEAD HISTORY MODAL - Complete with detailed change tracking -->
+<!-- Lead History Modal -->
 <div class="modal-overlay" id="lead-history-modal">
     <div class="modal modal-xl">
         <div class="modal-header">
-            <div class="modal-title">
-                <i class="fas fa-history" style="color: var(--accent);"></i> Lead History - Complete Audit Trail
-            </div>
+            <div class="modal-title"><i class="fas fa-history" style="color: var(--accent);"></i> Lead History - Complete Audit Trail</div>
             <div style="display: flex; gap: 8px;">
-                <button class="btn btn-outline btn-sm btn-export" onclick="exportLeadHistory()">
-                    <i class="fas fa-download"></i> Export
-                </button>
+                <button class="btn btn-outline btn-sm btn-export" onclick="exportLeadHistory()"><i class="fas fa-download"></i> Export</button>
                 <button class="modal-close" onclick="closeModal('lead-history-modal')"><i class="fas fa-times"></i></button>
             </div>
         </div>
         <div class="modal-body">
-            <!-- Lead Info Header -->
             <div id="history-lead-info" class="card" style="margin-bottom: 20px;"></div>
-            
-            <!-- Filter Chips -->
             <div class="filter-chips" id="history-filter-chips">
                 <button class="filter-chip active" data-filter="all" onclick="filterHistory('all')">All</button>
                 <button class="filter-chip" data-filter="CREATE" onclick="filterHistory('CREATE')"><i class="fas fa-plus-circle"></i> Created</button>
@@ -1631,11 +818,7 @@
                 <button class="filter-chip" data-filter="CONTACT_MADE" onclick="filterHistory('CONTACT_MADE')"><i class="fas fa-phone"></i> Contacts</button>
                 <button class="filter-chip" data-filter="FOLLOWUP_UPDATE" onclick="filterHistory('FOLLOWUP_UPDATE')"><i class="fas fa-calendar-alt"></i> Follow-ups</button>
             </div>
-            
-            <!-- History Timeline -->
             <div id="lead-history-content" class="history-timeline"></div>
-            
-            <!-- Summary Stats -->
             <div id="history-summary" style="margin-top: 20px;"></div>
         </div>
         <div class="modal-footer">
@@ -1646,20 +829,20 @@
 
 <script>
     // ============================================================
-    // CONFIGURATION
+    // CONFIGURATION & GLOBAL STATE
     // ============================================================
     const BASE = '';
     let token = localStorage.getItem('crm_token') || '';
     let currentRole = localStorage.getItem('crm_role') || '';
     let currentUserEmail = localStorage.getItem('crm_email') || '';
     
-    // Data stores
     let allEmployees = [];
     let allLeads = [];
     let allMyLeads = [];
     let allWebsiteLeads = [];
+    let allContacts = [];
+    let allContactsPageable = { content: [], totalElements: 0 };
     
-    // History data store
     let currentHistoryData = [];
     let currentHistoryLead = null;
     let currentHistoryFilter = 'all';
@@ -1762,28 +945,16 @@
 
     function getActionBadge(action) {
         const badges = {
-            'CREATE': 'badge-create',
-            'UPDATE': 'badge-update',
-            'STAGE_CHANGE': 'badge-stage',
-            'STATISTICS_UPDATE': 'badge-stat',
-            'CONTACT_MADE': 'badge-contact',
-            'FOLLOWUP_UPDATE': 'badge-info'
+            'CREATE': 'badge-create', 'UPDATE': 'badge-update', 'STAGE_CHANGE': 'badge-stage',
+            'STATISTICS_UPDATE': 'badge-stat', 'CONTACT_MADE': 'badge-contact', 'FOLLOWUP_UPDATE': 'badge-info'
         };
         const icons = {
-            'CREATE': 'fa-plus-circle',
-            'UPDATE': 'fa-edit',
-            'STAGE_CHANGE': 'fa-exchange-alt',
-            'STATISTICS_UPDATE': 'fa-chart-line',
-            'CONTACT_MADE': 'fa-phone',
-            'FOLLOWUP_UPDATE': 'fa-calendar-check'
+            'CREATE': 'fa-plus-circle', 'UPDATE': 'fa-edit', 'STAGE_CHANGE': 'fa-exchange-alt',
+            'STATISTICS_UPDATE': 'fa-chart-line', 'CONTACT_MADE': 'fa-phone', 'FOLLOWUP_UPDATE': 'fa-calendar-check'
         };
         const labels = {
-            'CREATE': 'Lead Created',
-            'UPDATE': 'Lead Updated',
-            'STAGE_CHANGE': 'Stage Changed',
-            'STATISTICS_UPDATE': 'Statistics Updated',
-            'CONTACT_MADE': 'Contact Made',
-            'FOLLOWUP_UPDATE': 'Follow-up Updated'
+            'CREATE': 'Lead Created', 'UPDATE': 'Lead Updated', 'STAGE_CHANGE': 'Stage Changed',
+            'STATISTICS_UPDATE': 'Statistics Updated', 'CONTACT_MADE': 'Contact Made', 'FOLLOWUP_UPDATE': 'Follow-up Updated'
         };
         return `<span class="history-badge ${badges[action] || 'badge-info'}">
             <i class="fas ${icons[action] || 'fa-history'}"></i> ${labels[action] || action}
@@ -1791,8 +962,9 @@
     }
 
     function renderFullLeadCard(lead, isAdmin = false, showUpdateBtn = true) {
+        const encryptedId = lead.id;
         return `
-            <div class="lead-card" onclick="viewLeadDetail('${lead.id}')">
+            <div class="lead-card" onclick="viewLeadDetail('${encryptedId}')">
                 <div class="lead-card-header">
                     <span class="lead-card-name">${escapeHtml(lead.name)}</span>
                     <span class="badge badge-${(lead.leadType || '').toLowerCase()}">${lead.leadType || 'N/A'}</span>
@@ -1816,10 +988,10 @@
                     <span><i class="fas fa-sync-alt"></i> Updates: ${lead.updateCount || 0}</span>
                 </div>
                 <div class="lead-actions" onclick="event.stopPropagation()">
-                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${lead.id}')"><i class="fas fa-eye"></i> View</button>
-                    ${showUpdateBtn ? `<button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${lead.id}', ${isAdmin})"><i class="fas fa-edit"></i> Update</button>` : ''}
-                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${lead.id}')"><i class="fas fa-history"></i> History</button>
-                    ${isAdmin ? `<button class="btn btn-danger btn-xs" onclick="deleteLead('${lead.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
+                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${encryptedId}')"><i class="fas fa-eye"></i> View</button>
+                    ${showUpdateBtn ? `<button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${encryptedId}', ${isAdmin})"><i class="fas fa-edit"></i> Update</button>` : ''}
+                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${encryptedId}')"><i class="fas fa-history"></i> History</button>
+                    ${isAdmin ? `<button class="btn btn-danger btn-xs" onclick="deleteLead('${encryptedId}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
                 </div>
             </div>
         `;
@@ -1836,18 +1008,15 @@
         openModal('lead-history-modal');
         currentHistoryFilter = 'all';
         
-        // Reset filter chips
         document.querySelectorAll('#history-filter-chips .filter-chip').forEach(chip => {
             chip.classList.remove('active');
             if (chip.dataset.filter === 'all') chip.classList.add('active');
         });
         
         try {
-            // Fetch lead details
             const leadRes = await api('GET', `/api/admin/leads/${id}`);
             currentHistoryLead = leadRes.data;
             
-            // Display lead info
             leadInfoDiv.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
@@ -1864,7 +1033,6 @@
                 </div>
             `;
             
-            // Fetch history
             const historyRes = await api('GET', `/api/admin/leads/${id}/history`);
             currentHistoryData = historyRes.data || [];
             
@@ -1880,7 +1048,6 @@
     function filterHistory(filterType) {
         currentHistoryFilter = filterType;
         
-        // Update active chip
         document.querySelectorAll('#history-filter-chips .filter-chip').forEach(chip => {
             chip.classList.remove('active');
             if (chip.dataset.filter === filterType) chip.classList.add('active');
@@ -1903,7 +1070,6 @@
             return;
         }
         
-        // Sort by date (newest first)
         const sortedHistory = [...historyData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         
         content.innerHTML = sortedHistory.map((item, index) => {
@@ -1923,26 +1089,16 @@
                         <div class="history-time">
                             <i class="fas fa-user"></i>
                             ${item.employee ? `${escapeHtml(item.employee.firstName)} ${escapeHtml(item.employee.lastName)}` : 'System'}
-                            ${item.employee?.email ? `<span style="color: var(--text3);">(${escapeHtml(item.employee.email)})</span>` : ''}
                         </div>
                     </div>
                     <div class="history-body">
-                        ${item.remarks ? `
-                            <div class="history-remarks">
-                                <i class="fas fa-comment"></i> ${escapeHtml(item.remarks)}
-                            </div>
-                        ` : ''}
-                        
+                        ${item.remarks ? `<div class="history-remarks"><i class="fas fa-comment"></i> ${escapeHtml(item.remarks)}</div>` : ''}
                         ${changes.length > 0 ? `
                             <div class="history-changes-list">
-                                <div style="font-size: 11px; color: var(--text3); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    <i class="fas fa-list-ul"></i> Changes Made:
-                                </div>
+                                <div style="font-size: 11px; color: var(--text3); margin-bottom: 8px;"><i class="fas fa-list-ul"></i> Changes Made:</div>
                                 ${changes.map(change => `
                                     <div class="change-item">
-                                        <div class="change-field">
-                                            <i class="fas fa-pen"></i> ${escapeHtml(change.field)}
-                                        </div>
+                                        <div class="change-field"><i class="fas fa-pen"></i> ${escapeHtml(change.field)}</div>
                                         <div class="change-values">
                                             <span class="old-value"><i class="fas fa-arrow-left"></i> ${escapeHtml(change.oldValue) || '<em>Not set</em>'}</span>
                                             <i class="fas fa-arrow-right arrow-icon"></i>
@@ -1952,23 +1108,7 @@
                                 `).join('')}
                             </div>
                         ` : ''}
-                        
-                        ${item.changes && !item.detailedChanges ? `
-                            <div class="history-changes" style="margin-top: 12px;">
-                                <i class="fas fa-info-circle"></i> ${escapeHtml(item.changes)}
-                            </div>
-                        ` : ''}
-                        
-                        ${item.previousStage && item.newStage && item.previousStage !== item.newStage ? `
-                            <div class="change-item" style="margin-top: 8px;">
-                                <div class="change-field"><i class="fas fa-exchange-alt"></i> Stage Change</div>
-                                <div class="change-values">
-                                    <span class="old-value">${escapeHtml(item.previousStage)}</span>
-                                    <i class="fas fa-arrow-right arrow-icon"></i>
-                                    <span class="new-value">${escapeHtml(item.newStage)}</span>
-                                </div>
-                            </div>
-                        ` : ''}
+                        ${item.changes && !item.detailedChanges ? `<div style="margin-top: 12px;"><i class="fas fa-info-circle"></i> ${escapeHtml(item.changes)}</div>` : ''}
                     </div>
                 </div>
             `;
@@ -1978,23 +1118,16 @@
     function parseChanges(item) {
         const changes = [];
         
-        // Check for detailed changes from the backend
         if (item.detailedChanges && typeof item.detailedChanges === 'object') {
             for (const [key, change] of Object.entries(item.detailedChanges)) {
                 if (change.oldValue !== change.newValue) {
-                    changes.push({
-                        field: key,
-                        oldValue: change.oldValue || '',
-                        newValue: change.newValue || ''
-                    });
+                    changes.push({ field: key, oldValue: change.oldValue || '', newValue: change.newValue || '' });
                 }
             }
         }
         
-        // If no detailed changes, try to parse from changes string
         if (changes.length === 0 && item.changes) {
             const changeText = item.changes;
-            // Try to extract field changes from the string
             const fieldPatterns = [
                 /(\w+):\s*'([^']*)'\s*→\s*'([^']*)'/g,
                 /(\w+)\s+changed\s+from\s+([^,]+?)\s+to\s+([^,]+?)(?:,|$)/gi,
@@ -2004,21 +1137,12 @@
             for (const pattern of fieldPatterns) {
                 let match;
                 while ((match = pattern.exec(changeText)) !== null) {
-                    changes.push({
-                        field: match[1],
-                        oldValue: match[2],
-                        newValue: match[3]
-                    });
+                    changes.push({ field: match[1], oldValue: match[2], newValue: match[3] });
                 }
             }
             
-            // If no structured changes found, add the whole change as one
             if (changes.length === 0 && changeText) {
-                changes.push({
-                    field: 'Details',
-                    oldValue: '',
-                    newValue: changeText
-                });
+                changes.push({ field: 'Details', oldValue: '', newValue: changeText });
             }
         }
         
@@ -2027,11 +1151,7 @@
     
     function renderHistorySummary(historyData) {
         const summaryDiv = document.getElementById('history-summary');
-        
-        if (!historyData || historyData.length === 0) {
-            summaryDiv.innerHTML = '';
-            return;
-        }
+        if (!historyData || historyData.length === 0) { summaryDiv.innerHTML = ''; return; }
         
         const totalUpdates = historyData.length;
         const createCount = historyData.filter(h => h.action === 'CREATE').length;
@@ -2039,7 +1159,6 @@
         const stageChanges = historyData.filter(h => h.action === 'STAGE_CHANGE').length;
         const contacts = historyData.filter(h => h.action === 'CONTACT_MADE').length;
         const statistics = historyData.filter(h => h.action === 'STATISTICS_UPDATE').length;
-        
         const uniqueUsers = [...new Set(historyData.map(h => h.employee?.email || 'System'))];
         
         summaryDiv.innerHTML = `
@@ -2064,7 +1183,6 @@
         }
         
         let csvContent = "Date,Time,Action,Employee,Email,Changes,Remarks,Previous Stage,New Stage\n";
-        
         for (const item of currentHistoryData) {
             const date = new Date(item.createdAt);
             const dateStr = date.toLocaleDateString('en-IN');
@@ -2073,7 +1191,6 @@
             const employeeEmail = item.employee?.email || '';
             const changes = item.changes?.replace(/,/g, ';') || '';
             const remarks = item.remarks?.replace(/,/g, ';') || '';
-            
             csvContent += `"${dateStr}","${timeStr}","${item.action}","${employeeName}","${employeeEmail}","${changes}","${remarks}","${item.previousStage || ''}","${item.newStage || ''}"\n`;
         }
         
@@ -2086,7 +1203,6 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
         toast('History exported successfully!', 'success');
     }
 
@@ -2125,29 +1241,19 @@
     }
 
     async function handleLogout() {
-        try {
-            await api('POST', '/api/auth/logout');
-        } catch (e) {}
-        
-        token = '';
-        currentRole = '';
-        currentUserEmail = '';
+        try { await api('POST', '/api/auth/logout'); } catch (e) {}
+        token = ''; currentRole = ''; currentUserEmail = '';
         localStorage.removeItem('crm_token');
         localStorage.removeItem('crm_role');
         localStorage.removeItem('crm_email');
-        
         document.getElementById('app').style.display = 'none';
         document.getElementById('login-page').style.display = 'flex';
         toast('Signed out successfully', 'info');
     }
 
     async function validateToken() {
-        try {
-            await api('GET', '/api/auth/validate');
-            return true;
-        } catch {
-            return false;
-        }
+        try { await api('GET', '/api/auth/validate'); return true; }
+        catch { return false; }
     }
 
     // ============================================================
@@ -2162,6 +1268,7 @@
             navActivate('section-dashboard');
             loadDashboard();
             loadEmployees();
+            loadContacts();
             loadLeadStatistics();
         } else {
             navActivate('section-my-profile');
@@ -2181,6 +1288,7 @@
             nav.innerHTML = `
                 <div class="nav-item" onclick="navActivate('section-dashboard'); loadDashboard()"><i class="fas fa-chart-pie"></i> Dashboard</div>
                 <div class="nav-item" onclick="navActivate('section-employees'); loadEmployees()"><i class="fas fa-users"></i> Employees</div>
+                <div class="nav-item" onclick="navActivate('section-contacts'); loadContacts()"><i class="fas fa-address-book"></i> Contacts</div>
                 <div class="nav-item" onclick="navActivate('section-leads'); loadLeads()"><i class="fas fa-funnel-dollar"></i> All Leads</div>
                 <div class="nav-item" onclick="navActivate('section-website-leads'); loadWebsiteLeads()"><i class="fas fa-globe"></i> Website Leads</div>
                 <div class="nav-item" onclick="navActivate('section-followups'); loadFollowUps()"><i class="fas fa-calendar-check"></i> Follow-ups</div>
@@ -2338,10 +1446,7 @@
 
     function openEditEmployee(encryptedId) {
         const emp = allEmployees.find(e => e.id === encryptedId);
-        if (!emp) {
-            toast('Employee not found', 'error');
-            return;
-        }
+        if (!emp) { toast('Employee not found', 'error'); return; }
         
         document.getElementById('emp-modal-title').textContent = 'Edit Employee';
         document.getElementById('emp-id').value = emp.id;
@@ -2431,11 +1536,7 @@
     async function handleResetPassword() {
         const email = document.getElementById('reset-email').value.trim();
         const newPassword = document.getElementById('reset-new-pass').value;
-        
-        if (!email || !newPassword) {
-            toast('Please fill all fields', 'error');
-            return;
-        }
+        if (!email || !newPassword) { toast('Please fill all fields', 'error'); return; }
         
         try {
             await api('POST', '/api/auth/admin/reset-password', { email, newPassword });
@@ -2443,6 +1544,172 @@
             closeModal('reset-pass-modal');
             document.getElementById('reset-email').value = '';
             document.getElementById('reset-new-pass').value = '';
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // CONTACTS MANAGEMENT
+    // ============================================================
+    async function loadContacts(page = 0, size = 20) {
+        try {
+            const res = await api('GET', `/api/admin/contacts?page=${page}&size=${size}`);
+            allContactsPageable = res.data;
+            allContacts = allContactsPageable.content || [];
+            document.getElementById('contacts-count-sub').textContent = `${allContactsPageable.totalElements || 0} total contacts`;
+            renderContacts(allContacts);
+        } catch (err) {
+            toast('Error loading contacts: ' + err.message, 'error');
+        }
+    }
+
+    function filterContacts() {
+        const search = document.getElementById('contacts-search').value.toLowerCase();
+        const status = document.getElementById('contacts-status-filter').value;
+        
+        const filtered = allContacts.filter(c => {
+            const matchSearch = !search || `${c.name} ${c.email} ${c.phoneNumber}`.toLowerCase().includes(search);
+            const matchStatus = !status || (status === 'active' ? c.isActive : !c.isActive);
+            return matchSearch && matchStatus;
+        });
+        renderContacts(filtered);
+    }
+
+    function renderContacts(contacts) {
+        const tbody = document.getElementById('contacts-table-body');
+        if (!contacts.length) {
+            tbody.innerHTML = '<tr><td colspan="7">No contacts found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = contacts.map(c => `
+            <tr>
+                <td><strong>${escapeHtml(c.name)}</strong></td>
+                <td>${escapeHtml(c.email)}</td>
+                <td>${c.phoneNumber || '-'}</td>
+                <td>${escapeHtml(c.address || '-')}</td>
+                <td><span class="badge badge-info">${c.totalLeads || 0} leads</span></td>
+                <td><span class="badge ${c.isActive ? 'badge-active' : 'badge-inactive'}">${c.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td>
+                    <button class="btn btn-outline btn-xs" onclick="viewContactDetail('${c.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-primary btn-xs" onclick="openEditContact('${c.id}')"><i class="fas fa-edit"></i></button>
+                    ${c.isActive ?
+                        `<button class="btn btn-warning btn-xs" onclick="deactivateContact('${c.id}')"><i class="fas fa-ban"></i></button>` :
+                        `<button class="btn btn-success btn-xs" onclick="reactivateContact('${c.id}')"><i class="fas fa-play"></i></button>`
+                    }
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function openCreateContact() {
+        document.getElementById('contact-modal-title').textContent = 'Add Contact';
+        document.getElementById('contact-form').reset();
+        document.getElementById('contact-id').value = '';
+        openModal('contact-modal');
+    }
+
+    function openEditContact(encryptedId) {
+        const contact = allContacts.find(c => c.id === encryptedId);
+        if (!contact) { toast('Contact not found', 'error'); return; }
+        
+        document.getElementById('contact-modal-title').textContent = 'Edit Contact';
+        document.getElementById('contact-id').value = contact.id;
+        document.getElementById('contact-name').value = contact.name;
+        document.getElementById('contact-email').value = contact.email;
+        document.getElementById('contact-phone').value = contact.phoneNumber;
+        document.getElementById('contact-address').value = contact.address || '';
+        openModal('contact-modal');
+    }
+
+    async function handleContactSubmit(e) {
+        e.preventDefault();
+        const encryptedId = document.getElementById('contact-id').value;
+        const body = {
+            name: document.getElementById('contact-name').value,
+            email: document.getElementById('contact-email').value,
+            phoneNumber: document.getElementById('contact-phone').value,
+            address: document.getElementById('contact-address').value || null
+        };
+        
+        try {
+            if (encryptedId) {
+                await api('PUT', `/api/admin/contacts/${encryptedId}`, body);
+                toast('Contact updated successfully!');
+            } else {
+                await api('POST', '/api/admin/contacts', body);
+                toast('Contact created successfully!');
+            }
+            closeModal('contact-modal');
+            await loadContacts();
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
+    async function viewContactDetail(encryptedId) {
+        const content = document.getElementById('contact-detail-content');
+        content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading...</div>';
+        openModal('contact-detail-modal');
+        
+        try {
+            const res = await api('GET', `/api/admin/contacts/${encryptedId}`);
+            const c = res.data;
+            
+            content.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item"><div class="info-label">Name</div><div class="info-value">${escapeHtml(c.name)}</div></div>
+                    <div class="info-item"><div class="info-label">Email</div><div class="info-value">${escapeHtml(c.email)}</div></div>
+                    <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${c.phoneNumber}</div></div>
+                    <div class="info-item"><div class="info-label">Address</div><div class="info-value">${escapeHtml(c.address || '-')}</div></div>
+                    <div class="info-item"><div class="info-label">Status</div><div class="info-value"><span class="badge ${c.isActive ? 'badge-active' : 'badge-inactive'}">${c.isActive ? 'Active' : 'Inactive'}</span></div></div>
+                    <div class="info-item"><div class="info-label">Created At</div><div class="info-value">${formatDateTime(c.createdAt)}</div></div>
+                    <div class="info-item"><div class="info-label">Last Updated</div><div class="info-value">${formatDateTime(c.updatedAt)}</div></div>
+                </div>
+                ${c.leads && c.leads.length ? `
+                    <hr style="border-color: var(--border); margin: 20px 0;">
+                    <div><strong><i class="fas fa-funnel-dollar"></i> Leads (${c.leads.length})</strong></div>
+                    <div style="margin-top: 15px; display: grid; gap: 10px;">
+                        ${c.leads.map(l => `
+                            <div class="lead-card" style="cursor: pointer;" onclick="viewLeadDetail('${l.id}'); closeModal('contact-detail-modal');">
+                                <div><strong>${escapeHtml(l.name)}</strong> - ${l.leadType || 'N/A'} - ${l.leadStage || 'N/A'}</div>
+                                <div><small>Assigned to: ${l.assignedEmployeeName || 'Unassigned'} | Follow-up: ${formatDate(l.nextFollowUpDate)}</small></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div class="empty-state">No leads associated with this contact</div>'}
+            `;
+        } catch (err) {
+            content.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+        }
+    }
+
+    async function deactivateContact(encryptedId) {
+        if (!confirm('Deactivate this contact?')) return;
+        try {
+            await api('DELETE', `/api/admin/contacts/${encryptedId}`);
+            toast('Contact deactivated');
+            await loadContacts();
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
+    async function reactivateContact(encryptedId) {
+        const contact = allContacts.find(c => c.id === encryptedId);
+        if (!contact) return;
+        
+        try {
+            await api('PUT', `/api/admin/contacts/${encryptedId}`, {
+                name: contact.name,
+                email: contact.email,
+                phoneNumber: contact.phoneNumber,
+                address: contact.address,
+                isActive: true
+            });
+            toast('Contact reactivated');
+            await loadContacts();
         } catch (err) {
             toast(err.message, 'error');
         }
@@ -2675,6 +1942,7 @@
         }
     }
 
+    // ENHANCED LEAD DETAIL VIEW WITH CONTACT INFORMATION
     async function viewLeadDetail(id) {
         const content = document.getElementById('lead-detail-content');
         content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading...</div>';
@@ -2685,9 +1953,32 @@
             const res = await api('GET', endpoint);
             const l = res.data;
             
+            // If contact info is available, fetch contact details
+            let contactHtml = '';
+            if (l.contactId) {
+                try {
+                    const contactRes = await api('GET', `/api/admin/contacts/${l.contactId}`);
+                    const contact = contactRes.data;
+                    contactHtml = `
+                        <div class="contact-card" onclick="viewContactDetail('${l.contactId}'); closeModal('lead-detail-modal');" style="cursor: pointer;">
+                            <h4><i class="fas fa-address-card"></i> Contact Information <i class="fas fa-external-link-alt" style="font-size: 11px; margin-left: 8px;"></i></h4>
+                            <div class="info-grid" style="margin-top: 10px;">
+                                <div class="info-item"><div class="info-label">Contact Name</div><div class="info-value">${escapeHtml(contact.name)}</div></div>
+                                <div class="info-item"><div class="info-label">Contact Email</div><div class="info-value">${escapeHtml(contact.email)}</div></div>
+                                <div class="info-item"><div class="info-label">Contact Phone</div><div class="info-value">${contact.phoneNumber}</div></div>
+                                <div class="info-item"><div class="info-label">Total Leads</div><div class="info-value"><span class="badge badge-info">${contact.totalLeads || 0} leads</span> <button class="btn btn-outline btn-xs" onclick="event.stopPropagation(); viewContactDetail('${l.contactId}')">View All Leads</button></div></div>
+                            </div>
+                        </div>
+                    `;
+                } catch (err) {
+                    contactHtml = `<div class="contact-card"><h4><i class="fas fa-address-card"></i> Contact Information</h4><div class="info-value">Could not load contact details</div></div>`;
+                }
+            }
+            
             content.innerHTML = `
+                ${contactHtml}
                 <div class="info-grid">
-                    <div class="info-item"><div class="info-label">Name</div><div class="info-value">${escapeHtml(l.name)}</div></div>
+                    <div class="info-item"><div class="info-label">Lead Name</div><div class="info-value">${escapeHtml(l.name)}</div></div>
                     <div class="info-item"><div class="info-label">Email</div><div class="info-value">${escapeHtml(l.email)}</div></div>
                     <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${l.phoneNumber}</div></div>
                     <div class="info-item"><div class="info-label">Lead Type</div><div class="info-value"><span class="badge badge-${(l.leadType || '').toLowerCase()}">${l.leadType}</span></div></div>
@@ -2791,7 +2082,6 @@
     async function loadLeadsByDateRange() {
         const startDate = document.getElementById('stats-start-date').value;
         const endDate = document.getElementById('stats-end-date').value;
-        
         if (!startDate || !endDate) return;
         
         try {
@@ -3008,9 +2298,7 @@
             if (valid) {
                 initApp();
             } else {
-                token = '';
-                currentRole = '';
-                currentUserEmail = '';
+                token = ''; currentRole = ''; currentUserEmail = '';
                 localStorage.removeItem('crm_token');
                 localStorage.removeItem('crm_role');
                 localStorage.removeItem('crm_email');

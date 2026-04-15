@@ -26,7 +26,7 @@ public class Lead {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -34,11 +34,11 @@ public class Lead {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LeadType leadType;  // HOT, WARM, COLD
+    private LeadType leadType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LeadStage leadStage;  // INTERESTED, NOT_INTERESTED, NORMAL
+    private LeadStage leadStage;
 
     @Column(nullable = false)
     private LocalDate nextFollowUpDate;
@@ -54,13 +54,16 @@ public class Lead {
     private Employee assignedEmployee;
 
     @Column(nullable = false)
-    private String source;  // Where the lead came from
+    private String source;
 
     @Column(nullable = false)
     @Builder.Default
     private Boolean isActive = true;
 
-    // Simplified statistics - only calls and meetings
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contact_id", nullable = false)
+    private Contact contact;
+
     private Integer callsMadeCount;
     private Integer meetingsBookedCount;
     private Integer meetingsDoneCount;
@@ -79,17 +82,13 @@ public class Lead {
         if (meetingsDoneCount == null) meetingsDoneCount = 0;
     }
 
-    // Service-related fields
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)
     private MainService interestedService;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)
     private ServiceSubcategory serviceSubcategory;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)
     private ServiceSubSubcategory serviceSubSubcategory;
 
     @Column(length = 500)

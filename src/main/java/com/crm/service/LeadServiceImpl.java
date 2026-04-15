@@ -1,13 +1,11 @@
 package com.crm.service;
 
 import com.crm.dto.*;
-import com.crm.entity.Employee;
-import com.crm.entity.Lead;
-import com.crm.entity.LeadStage;
-import com.crm.entity.LeadType;
+import com.crm.entity.*;
 import com.crm.exception.DuplicateResourceException;
 import com.crm.exception.ResourceNotFoundException;
 import com.crm.exception.UnauthorizedException;
+import com.crm.repository.ContactRepository;
 import com.crm.repository.EmployeeRepository;
 import com.crm.repository.LeadRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +35,7 @@ public class LeadServiceImpl implements LeadService {
     private final EmailService emailService;
     private final LeadHistoryService leadHistoryService;
     private final ObjectMapper objectMapper;
+    private final ContactRepository contactRepository;
 
     @Override
     public LeadResponseDTO createLead(LeadDTO leadDTO) {
@@ -46,14 +45,31 @@ public class LeadServiceImpl implements LeadService {
         Employee currentUser = employeeRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (leadRepository.existsByEmail(leadDTO.getEmail())) {
-            throw new DuplicateResourceException("Lead with email already exists: " + leadDTO.getEmail());
+        // Get or create contact by email OR phone
+        Contact contact = contactRepository.findByEmailIgnoreCaseOrPhoneNumber(
+                leadDTO.getEmail(),
+                leadDTO.getPhoneNumber()
+        ).orElse(null);
+
+        if (contact == null) {
+            contact = Contact.builder()
+                    .name(leadDTO.getName())
+                    .email(leadDTO.getEmail().toLowerCase())
+                    .phoneNumber(leadDTO.getPhoneNumber())
+                    .isActive(true)
+                    .build();
+            contact = contactRepository.save(contact);
+            log.info("Created new contact with ID: {}", contact.getId());
+        } else {
+            log.info("Found existing contact with ID: {}", contact.getId());
         }
 
         Employee assignedEmployee = employeeRepository.findById(leadDTO.getAssignedEmployeeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + leadDTO.getAssignedEmployeeId()));
 
         Lead lead = mapToEntity(leadDTO, assignedEmployee);
+        lead.setContact(contact);
+
         Lead savedLead = leadRepository.save(lead);
 
         leadHistoryService.recordLeadCreation(savedLead, currentUser);
@@ -65,7 +81,7 @@ public class LeadServiceImpl implements LeadService {
                 lead.getLeadType().getDescription()
         );
 
-        log.info("Lead created successfully with ID: {}", savedLead.getId());
+        log.info("Lead created successfully with ID: {} for contact ID: {}", savedLead.getId(), contact.getId());
         return mapToResponseDTO(savedLead);
     }
 
@@ -80,20 +96,15 @@ public class LeadServiceImpl implements LeadService {
         Lead existingLead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with ID: " + id));
 
-        // Create a copy of lead before changes for comparison
         Lead oldLead = copyLead(existingLead);
         List<String> changes = new ArrayList<>();
 
-        // Track and update each field
         if (leadUpdateDTO.getName() != null && !leadUpdateDTO.getName().equals(existingLead.getName())) {
             changes.add("Name: '" + existingLead.getName() + "' → '" + leadUpdateDTO.getName() + "'");
             existingLead.setName(leadUpdateDTO.getName());
         }
 
         if (leadUpdateDTO.getEmail() != null && !leadUpdateDTO.getEmail().equals(existingLead.getEmail())) {
-            if (leadRepository.existsByEmail(leadUpdateDTO.getEmail())) {
-                throw new DuplicateResourceException("Lead with email already exists: " + leadUpdateDTO.getEmail());
-            }
             changes.add("Email: '" + existingLead.getEmail() + "' → '" + leadUpdateDTO.getEmail() + "'");
             existingLead.setEmail(leadUpdateDTO.getEmail());
         }
@@ -149,7 +160,6 @@ public class LeadServiceImpl implements LeadService {
             );
         }
 
-        // Update service-related fields
         if (leadUpdateDTO.getInterestedService() != null) {
             if (!leadUpdateDTO.getInterestedService().equals(existingLead.getInterestedService())) {
                 changes.add("Interested Service: '" + (existingLead.getInterestedService() != null ? existingLead.getInterestedService().getDisplayName() : "Not set") +
@@ -185,11 +195,9 @@ public class LeadServiceImpl implements LeadService {
         Lead updatedLead = leadRepository.save(existingLead);
 
         if (!changes.isEmpty()) {
-            // Record detailed field-level changes
             leadHistoryService.recordDetailedLeadUpdate(oldLead, updatedLead, currentUser,
                     "Lead details updated by admin: " + currentUser.getEmail());
 
-            // Send email notification to admin
             String role = currentUser.getEmail().equals("redcircle0908@gmail.com") ? "ADMIN" : "EMPLOYEE";
             emailService.sendLeadChangeNotificationToAdmin(oldLead, updatedLead,
                     currentUser.getFirstName() + " " + currentUser.getLastName(),
@@ -213,14 +221,12 @@ public class LeadServiceImpl implements LeadService {
         Lead lead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with ID: " + id));
 
-        // Create a copy for history
         Lead oldLead = copyLead(lead);
 
         lead.setIsActive(false);
         lead.setLastUpdatedBy(currentUser.getEmail());
         Lead savedLead = leadRepository.save(lead);
 
-        // Record deletion in history
         leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, currentUser,
                 "Lead soft deleted by " + currentUser.getEmail());
 
@@ -313,7 +319,6 @@ public class LeadServiceImpl implements LeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
-        // Create a copy for history
         Lead oldLead = copyLead(lead);
         List<String> statsChanges = new ArrayList<>();
 
@@ -339,10 +344,7 @@ public class LeadServiceImpl implements LeadService {
         Lead updatedLead = leadRepository.save(lead);
 
         if (!statsChanges.isEmpty()) {
-            String allChanges = String.join("; ", statsChanges);
             leadHistoryService.recordStatisticsUpdate(oldLead, updatedLead, currentUser, statsChanges);
-
-            // Send email notification for statistics update
             emailService.sendLeadChangeNotificationToAdmin(oldLead, updatedLead,
                     currentUser.getFirstName() + " " + currentUser.getLastName(),
                     isAdmin ? "ADMIN" : "EMPLOYEE", statsChanges);
@@ -396,7 +398,6 @@ public class LeadServiceImpl implements LeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
-        // Create a copy for history
         Lead oldLead = copyLead(lead);
 
         String oldStage = lead.getLeadStage().toString();
@@ -414,7 +415,6 @@ public class LeadServiceImpl implements LeadService {
         Lead savedLead = leadRepository.save(lead);
         leadHistoryService.recordStageChange(savedLead, employee, oldStage, stage, "Stage updated by " + employee.getEmail());
 
-        // Send email notification for stage change
         List<String> changes = List.of("Stage changed from '" + oldStage + "' to '" + stage + "'");
         emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
                 employee.getFirstName() + " " + employee.getLastName(),
@@ -438,7 +438,6 @@ public class LeadServiceImpl implements LeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
-        // Create a copy for history
         Lead oldLead = copyLead(lead);
 
         String oldFollowUpDate = lead.getNextFollowUpDate().toString();
@@ -454,7 +453,6 @@ public class LeadServiceImpl implements LeadService {
         leadHistoryService.recordFollowUpUpdate(oldLead, savedLead, employee,
                 oldFollowUpDate, nextFollowUpDate, oldDescription, nextFollowUpDescription);
 
-        // Send email notification for follow-up update
         List<String> changes = List.of(
                 "Follow-up date changed from '" + oldFollowUpDate + "' to '" + nextFollowUpDate + "'",
                 "Follow-up description changed from '" + oldDescription + "' to '" + nextFollowUpDescription + "'"
@@ -481,7 +479,6 @@ public class LeadServiceImpl implements LeadService {
             throw new UnauthorizedException("You are not authorized to update this lead");
         }
 
-        // Create a copy for history
         Lead oldLead = copyLead(lead);
         List<String> changes = new ArrayList<>();
         String oldStage = lead.getLeadStage().toString();
@@ -526,11 +523,9 @@ public class LeadServiceImpl implements LeadService {
         Lead savedLead = leadRepository.save(lead);
 
         if (!changes.isEmpty()) {
-            String allChanges = String.join("; ", changes);
             leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, employee,
                     "Consolidated lead update by employee: " + employee.getEmail());
 
-            // Send email notification
             String role = employee.getEmail().equals("redcircle0908@gmail.com") ? "ADMIN" : "EMPLOYEE";
             emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
                     employee.getFirstName() + " " + employee.getLastName(),
