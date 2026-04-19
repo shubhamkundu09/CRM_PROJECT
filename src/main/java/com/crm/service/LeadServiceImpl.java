@@ -11,6 +11,10 @@ import com.crm.repository.LeadRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -234,70 +238,28 @@ public class LeadServiceImpl implements LeadService {
     }
 
     @Override
+    public List<LeadResponseDTO> getLeadsByEmployee(Long employeeId) {
+        log.info("Fetching leads for employee ID: {}", employeeId);
+
+        // Use the search method internally
+        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.by("createdAt").descending());
+        Page<LeadResponseDTO> page = searchLeads(
+                null, null, null, null, null,
+                employeeId, true, null, null, null, null,
+                null, null, null, null,
+                null, null, null, null, null, null,
+                pageable
+        );
+
+        return page.getContent();
+    }
+
+    @Override
     public LeadResponseDTO getLeadById(Long id) {
         log.info("Fetching lead with ID: {}", id);
         Lead lead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with ID: " + id));
         return mapToResponseDTO(lead);
-    }
-
-    @Override
-    public List<LeadResponseDTO> getAllLeads() {
-        log.info("Fetching all active leads");
-        return leadRepository.findByIsActiveTrue()
-                .stream()
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<LeadResponseDTO> getLeadsByEmployee(Long employeeId) {
-        log.info("Fetching leads for employee ID: {}", employeeId);
-        return leadRepository.findByAssignedEmployeeId(employeeId)
-                .stream()
-                .filter(Lead::getIsActive)
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<LeadResponseDTO> getLeadsByType(LeadType leadType) {
-        log.info("Fetching leads by type: {}", leadType);
-        return leadRepository.findByLeadType(leadType)
-                .stream()
-                .filter(Lead::getIsActive)
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<LeadResponseDTO> getLeadsByStage(LeadStage leadStage) {
-        log.info("Fetching leads by stage: {}", leadStage);
-        return leadRepository.findByLeadStage(leadStage)
-                .stream()
-                .filter(Lead::getIsActive)
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<LeadResponseDTO> getTodayFollowUps() {
-        log.info("Fetching today's follow-ups");
-        return leadRepository.findByNextFollowUpDate(LocalDate.now())
-                .stream()
-                .filter(Lead::getIsActive)
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<LeadResponseDTO> getPendingFollowUps() {
-        log.info("Fetching pending follow-ups");
-        return leadRepository.findByNextFollowUpDateBefore(LocalDate.now())
-                .stream()
-                .filter(Lead::getIsActive)
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -370,18 +332,6 @@ public class LeadServiceImpl implements LeadService {
         statistics.put("normal_leads", allLeads.stream().filter(l -> l.getLeadStage() == LeadStage.NORMAL).count());
 
         return statistics;
-    }
-
-    @Override
-    public List<LeadResponseDTO> getLeadsByDateRange(LocalDate startDate, LocalDate endDate) {
-        log.info("Fetching leads between {} and {}", startDate, endDate);
-        return leadRepository.findAll()
-                .stream()
-                .filter(lead -> lead.getCreatedAt().toLocalDate().isAfter(startDate.minusDays(1)) &&
-                        lead.getCreatedAt().toLocalDate().isBefore(endDate.plusDays(1)) &&
-                        lead.getIsActive())
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -534,6 +484,61 @@ public class LeadServiceImpl implements LeadService {
 
         log.info("Lead {} updated successfully with {} changes", id, changes.size());
         return mapToResponseDTO(savedLead);
+    }
+
+    @Override
+    public Page<LeadResponseDTO> searchLeads(
+            String name,
+            String email,
+            String phone,
+            LeadType leadType,
+            LeadStage leadStage,
+            Long assignedEmployeeId,
+            Boolean isActive,
+            String source,
+            LocalDate nextFollowUpDate,
+            LocalDate followUpFrom,
+            LocalDate followUpTo,
+            LocalDate createdFrom,
+            LocalDate createdTo,
+            LocalDate updatedFrom,
+            LocalDate updatedTo,
+            Integer minCallsMade,
+            Integer maxCallsMade,
+            Integer minMeetingsBooked,
+            Integer maxMeetingsBooked,
+            Integer minMeetingsDone,
+            Integer maxMeetingsDone,
+            Pageable pageable) {
+
+        log.info("Searching leads with filters - name: {}, email: {}, phone: {}, leadType: {}, leadStage: {}, " +
+                        "assignedEmployeeId: {}, isActive: {}, source: {}, nextFollowUpDate: {}, followUpRange: {} to {}, " +
+                        "createdRange: {} to {}, updatedRange: {} to {}, callsMadeRange: {} to {}, meetingsBookedRange: {} to {}, " +
+                        "meetingsDoneRange: {} to {}",
+                name, email, phone, leadType, leadStage, assignedEmployeeId, isActive, source,
+                nextFollowUpDate, followUpFrom, followUpTo, createdFrom, createdTo, updatedFrom, updatedTo,
+                minCallsMade, maxCallsMade, minMeetingsBooked, maxMeetingsBooked, minMeetingsDone, maxMeetingsDone);
+
+        // Normalize string parameters
+        name = normalize(name);
+        email = normalize(email);
+        phone = normalize(phone);
+        source = normalize(source);
+
+        Page<Lead> leadPage = leadRepository.searchLeads(
+                name, email, phone, leadType, leadStage, assignedEmployeeId, isActive, source,
+                nextFollowUpDate, followUpFrom, followUpTo, createdFrom, createdTo, updatedFrom, updatedTo,
+                minCallsMade, maxCallsMade, minMeetingsBooked, maxMeetingsBooked, minMeetingsDone, maxMeetingsDone,
+                pageable
+        );
+
+        return leadPage.map(this::mapToResponseDTO);
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    private String normalize(String value) {
+        return (value == null || value.trim().isEmpty()) ? null : value.trim();
     }
 
     private String processContactMade(Lead lead, EmployeeLeadUpdateDTO updateDTO) {

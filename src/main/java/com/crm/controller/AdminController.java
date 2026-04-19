@@ -200,55 +200,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(lead, "Lead retrieved successfully", request.getRequestURI()));
     }
 
-    @GetMapping("/leads")
-    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getAllLeads(HttpServletRequest request) {
-        log.info("Fetching all leads");
-        List<LeadResponseDTO> leads = leadService.getAllLeads();
-        return ResponseEntity.ok(ApiResponse.success(leads, "Leads retrieved successfully", request.getRequestURI()));
-    }
-
-    @GetMapping("/leads/employee/{employeeId}")
-    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getLeadsByEmployee(
-            @PathVariable String employeeId,
-            HttpServletRequest request) {
-        Long decryptedEmployeeId = CryptoUtil.decryptToLong(employeeId);
-        log.info("Fetching leads for employee ID: {}", decryptedEmployeeId);
-        List<LeadResponseDTO> leads = leadService.getLeadsByEmployee(decryptedEmployeeId);
-        return ResponseEntity.ok(ApiResponse.success(leads, "Leads retrieved successfully for employee", request.getRequestURI()));
-    }
-
-    @GetMapping("/leads/type/{leadType}")
-    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getLeadsByType(
-            @PathVariable LeadType leadType,
-            HttpServletRequest request) {
-        log.info("Fetching leads by type: {}", leadType);
-        List<LeadResponseDTO> leads = leadService.getLeadsByType(leadType);
-        return ResponseEntity.ok(ApiResponse.success(leads, "Leads retrieved successfully by type", request.getRequestURI()));
-    }
-
-    @GetMapping("/leads/stage/{leadStage}")
-    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getLeadsByStage(
-            @PathVariable LeadStage leadStage,
-            HttpServletRequest request) {
-        log.info("Fetching leads by stage: {}", leadStage);
-        List<LeadResponseDTO> leads = leadService.getLeadsByStage(leadStage);
-        return ResponseEntity.ok(ApiResponse.success(leads, "Leads retrieved successfully by stage", request.getRequestURI()));
-    }
-
-    @GetMapping("/leads/followups/today")
-    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getTodayFollowUps(HttpServletRequest request) {
-        log.info("Fetching today's follow-ups");
-        List<LeadResponseDTO> leads = leadService.getTodayFollowUps();
-        return ResponseEntity.ok(ApiResponse.success(leads, "Today's follow-ups retrieved successfully", request.getRequestURI()));
-    }
-
-    @GetMapping("/leads/followups/pending")
-    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getPendingFollowUps(HttpServletRequest request) {
-        log.info("Fetching pending follow-ups");
-        List<LeadResponseDTO> leads = leadService.getPendingFollowUps();
-        return ResponseEntity.ok(ApiResponse.success(leads, "Pending follow-ups retrieved successfully", request.getRequestURI()));
-    }
-
     @PatchMapping("/leads/{id}/statistics")
     public ResponseEntity<ApiResponse<LeadResponseDTO>> updateLeadStatistics(
             @PathVariable String id,
@@ -267,16 +218,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(statistics, "Lead statistics retrieved successfully", request.getRequestURI()));
     }
 
-    @GetMapping("/leads/date-range")
-    public ResponseEntity<ApiResponse<List<LeadResponseDTO>>> getLeadsByDateRange(
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate,
-            HttpServletRequest request) {
-        log.info("Fetching leads between {} and {}", startDate, endDate);
-        List<LeadResponseDTO> leads = leadService.getLeadsByDateRange(startDate, endDate);
-        return ResponseEntity.ok(ApiResponse.success(leads, "Leads retrieved successfully for date range", request.getRequestURI()));
-    }
-
     @GetMapping("/leads/{id}/history")
     public ResponseEntity<ApiResponse<List<LeadHistoryDTO>>> getLeadHistory(
             @PathVariable String id,
@@ -285,6 +226,51 @@ public class AdminController {
         log.info("Fetching history for lead ID: {}", decryptedId);
         List<LeadHistoryDTO> history = leadHistoryService.getLeadHistory(decryptedId);
         return ResponseEntity.ok(ApiResponse.success(history, "Lead history retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/leads/search")
+    public ResponseEntity<ApiResponse<Page<LeadResponseDTO>>> searchLeads(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) LeadType leadType,
+            @RequestParam(required = false) LeadStage leadStage,
+            @RequestParam(required = false) Long assignedEmployeeId,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) LocalDate nextFollowUpDate,
+            @RequestParam(required = false) LocalDate followUpFrom,
+            @RequestParam(required = false) LocalDate followUpTo,
+            @RequestParam(required = false) LocalDate createdFrom,
+            @RequestParam(required = false) LocalDate createdTo,
+            @RequestParam(required = false) LocalDate updatedFrom,
+            @RequestParam(required = false) LocalDate updatedTo,
+            @RequestParam(required = false) Integer minCallsMade,
+            @RequestParam(required = false) Integer maxCallsMade,
+            @RequestParam(required = false) Integer minMeetingsBooked,
+            @RequestParam(required = false) Integer maxMeetingsBooked,
+            @RequestParam(required = false) Integer minMeetingsDone,
+            @RequestParam(required = false) Integer maxMeetingsDone,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletRequest request) {
+
+        log.info("Searching leads with pagination - page: {}, size: {}, sortBy: {}, sortDir: {}",
+                page, size, sortBy, sortDir);
+
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<LeadResponseDTO> leads = leadService.searchLeads(
+                name, email, phone, leadType, leadStage, assignedEmployeeId, isActive, source,
+                nextFollowUpDate, followUpFrom, followUpTo, createdFrom, createdTo, updatedFrom, updatedTo,
+                minCallsMade, maxCallsMade, minMeetingsBooked, maxMeetingsBooked, minMeetingsDone, maxMeetingsDone,
+                pageable
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(leads, "Leads search completed", request.getRequestURI()));
     }
 
     // ==================== WEBSITE LEAD MANAGEMENT ====================

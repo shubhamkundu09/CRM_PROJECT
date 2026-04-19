@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -180,6 +183,10 @@
         @keyframes slideOut { to { transform: translateX(110%); opacity: 0; } }
         .pass-strength { height: 3px; border-radius: 3px; background: var(--border); overflow: hidden; margin-top: 8px; }
         .pass-strength-bar { height: 100%; width: 0; transition: width 0.3s; background: linear-gradient(90deg, var(--hot), var(--warm), var(--accent3)); }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .pagination button { padding: 6px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); cursor: pointer; }
+        .pagination button:hover { background: var(--accent); border-color: var(--accent); }
+        .pagination button.active { background: var(--accent); border-color: var(--accent); }
         @media (max-width: 1024px) { .sidebar { transform: translateX(-100%); transition: transform 0.3s; } .main-content { margin-left: 0; padding: 20px; } .form-grid { grid-template-columns: 1fr; } .form-grid .col-span-2 { grid-column: span 1; } }
         @media (max-width: 768px) { .login-grid { grid-template-columns: 1fr; } .login-left { display: none; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .leads-grid { grid-template-columns: 1fr; } .info-grid { grid-template-columns: 1fr; } }
     </style>
@@ -348,6 +355,7 @@
                         <tbody id="contacts-table-body"></tbody>
                     </table>
                 </div>
+                <div class="pagination" id="contacts-pagination"></div>
             </div>
         </div>
         
@@ -385,7 +393,7 @@
             </div>
         </div>
         
-        <!-- ALL LEADS -->
+        <!-- ALL LEADS - USING UNIFIED SEARCH -->
         <div id="section-leads" class="section">
             <div class="topbar">
                 <div>
@@ -400,20 +408,25 @@
             <div class="filter-bar">
                 <div class="search-wrap">
                     <i class="fas fa-search"></i>
-                    <input type="text" class="search-input" id="leads-search" placeholder="Search leads..." oninput="filterLeads()">
+                    <input type="text" class="search-input" id="leads-search" placeholder="Search leads by name, email, phone..." oninput="searchLeads()">
                 </div>
-                <select class="select-filter" id="leads-type-filter" onchange="filterLeads()">
+                <select class="select-filter" id="leads-type-filter" onchange="searchLeads()">
                     <option value="">All Types</option>
                     <option value="HOT">Hot</option>
                     <option value="WARM">Warm</option>
                     <option value="COLD">Cold</option>
                 </select>
-                <select class="select-filter" id="leads-stage-filter" onchange="filterLeads()">
+                <select class="select-filter" id="leads-stage-filter" onchange="searchLeads()">
                     <option value="">All Stages</option>
                     <option value="INTERESTED">Interested</option>
                     <option value="NOT_INTERESTED">Not Interested</option>
                     <option value="NORMAL">Normal</option>
                 </select>
+                <select class="select-filter" id="leads-employee-filter" onchange="searchLeads()">
+                    <option value="">All Employees</option>
+                </select>
+                <input type="date" class="select-filter" id="leads-followup-date" placeholder="Follow-up Date" onchange="searchLeads()">
+                <button class="btn btn-outline btn-sm" onclick="resetLeadFilters()"><i class="fas fa-undo"></i> Reset</button>
             </div>
             <div class="card">
                 <div class="table-wrapper">
@@ -424,6 +437,7 @@
                         <tbody id="leads-table-body"></tbody>
                     </table>
                 </div>
+                <div class="pagination" id="leads-pagination"></div>
             </div>
         </div>
         
@@ -576,8 +590,104 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Add this new section in the main-content area, after the CHANGE PASSWORD section -->
+        
+        <!-- BANNER MANAGEMENT (Admin only) -->
+        <div id="section-banners" class="section">
+            <div class="topbar">
+                <div>
+                    <div class="page-title"><i class="fas fa-images"></i> Banner Management</div>
+                    <div class="page-sub">Manage website banners - Add, edit, or remove promotional banners</div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openCreateBanner()">
+                    <i class="fas fa-plus"></i> Add New Banner
+                </button>
+            </div>
+            
+            <div class="filter-bar">
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" id="banner-search" placeholder="Search banners by description..." oninput="filterBanners()">
+                </div>
+                <select class="select-filter" id="banner-status-filter" onchange="filterBanners()">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="loadBanners()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div id="banners-grid" class="leads-grid"></div>
+                    <div class="pagination" id="banners-pagination"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Create/Edit Banner Modal -->
+        <div class="modal-overlay" id="banner-modal">
+            <div class="modal modal-md">
+                <div class="modal-header">
+                    <div class="modal-title" id="banner-modal-title">Add New Banner</div>
+                    <button class="modal-close" onclick="closeModal('banner-modal')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="banner-form" onsubmit="handleBannerSubmit(event)" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label class="form-label">Banner Image *</label>
+                            <input type="file" class="form-control" id="banner-image" accept="image/jpeg,image/png,image/jpg,image/webp" style="padding: 8px;">
+                            <div class="page-sub" style="margin-top: 6px; font-size: 10px;">Supported formats: JPG, PNG, WEBP. Max size: 5MB</div>
+                            <div id="current-image-preview" style="display: none; margin-top: 10px;">
+                                <img id="image-preview" src="" alt="Current Banner" style="max-width: 100%; max-height: 150px; border-radius: var(--radius-sm);">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-control" id="banner-description" rows="3" required placeholder="Enter banner description..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Display Order</label>
+                            <input type="number" class="form-control" id="banner-order" value="0" placeholder="Lower number = higher priority">
+                            <div class="page-sub" style="margin-top: 6px; font-size: 10px;">Banners with lower order number appear first</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="banner-status">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                        <input type="hidden" id="banner-id">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('banner-modal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="document.getElementById('banner-form').requestSubmit()">
+                        <i class="fas fa-save"></i> Save Banner
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- View Banner Detail Modal -->
+        <div class="modal-overlay" id="banner-detail-modal">
+            <div class="modal modal-md">
+                <div class="modal-header">
+                    <div class="modal-title">Banner Details</div>
+                    <button class="modal-close" onclick="closeModal('banner-detail-modal')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body" id="banner-detail-content"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('banner-detail-modal')">Close</button>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
+
+<!-- MODALS (Same as before - keep all modal HTML from original) -->
 
 <!-- MODALS -->
 
@@ -827,6 +937,7 @@
     </div>
 </div>
 
+
 <script>
     // ============================================================
     // CONFIGURATION & GLOBAL STATE
@@ -837,11 +948,11 @@
     let currentUserEmail = localStorage.getItem('crm_email') || '';
     
     let allEmployees = [];
-    let allLeads = [];
-    let allMyLeads = [];
+    let allContactsPageable = { content: [], totalElements: 0, pageable: { pageNumber: 0 } };
     let allWebsiteLeads = [];
-    let allContacts = [];
-    let allContactsPageable = { content: [], totalElements: 0 };
+    let currentLeadsPage = 0;
+    let currentLeadsSize = 20;
+    let currentLeadsTotal = 0;
     
     let currentHistoryData = [];
     let currentHistoryLead = null;
@@ -891,14 +1002,6 @@
     function openModal(id) { document.getElementById(id).classList.add('open'); }
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-    function switchTab(el, panelId) {
-        const modalBody = el.closest('.modal-body');
-        modalBody.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-        modalBody.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-        document.getElementById(panelId).style.display = 'block';
-    }
-
     function formatDate(d) {
         if (!d) return '-';
         try {
@@ -915,24 +1018,6 @@
         } catch { return d; }
     }
 
-    function formatTimeAgo(dateStr) {
-        if (!dateStr) return '';
-        try {
-            const date = new Date(dateStr);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 1) return 'just now';
-            if (diffMins < 60) return `${diffMins} min ago`;
-            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            return formatDateTime(dateStr);
-        } catch { return formatDateTime(dateStr); }
-    }
-
     function escapeHtml(str) {
         if (!str) return '';
         return String(str).replace(/[&<>]/g, function(m) {
@@ -943,28 +1028,9 @@
         });
     }
 
-    function getActionBadge(action) {
-        const badges = {
-            'CREATE': 'badge-create', 'UPDATE': 'badge-update', 'STAGE_CHANGE': 'badge-stage',
-            'STATISTICS_UPDATE': 'badge-stat', 'CONTACT_MADE': 'badge-contact', 'FOLLOWUP_UPDATE': 'badge-info'
-        };
-        const icons = {
-            'CREATE': 'fa-plus-circle', 'UPDATE': 'fa-edit', 'STAGE_CHANGE': 'fa-exchange-alt',
-            'STATISTICS_UPDATE': 'fa-chart-line', 'CONTACT_MADE': 'fa-phone', 'FOLLOWUP_UPDATE': 'fa-calendar-check'
-        };
-        const labels = {
-            'CREATE': 'Lead Created', 'UPDATE': 'Lead Updated', 'STAGE_CHANGE': 'Stage Changed',
-            'STATISTICS_UPDATE': 'Statistics Updated', 'CONTACT_MADE': 'Contact Made', 'FOLLOWUP_UPDATE': 'Follow-up Updated'
-        };
-        return `<span class="history-badge ${badges[action] || 'badge-info'}">
-            <i class="fas ${icons[action] || 'fa-history'}"></i> ${labels[action] || action}
-        </span>`;
-    }
-
     function renderFullLeadCard(lead, isAdmin = false, showUpdateBtn = true) {
-        const encryptedId = lead.id;
         return `
-            <div class="lead-card" onclick="viewLeadDetail('${encryptedId}')">
+            <div class="lead-card" onclick="viewLeadDetail('${lead.id}')">
                 <div class="lead-card-header">
                     <span class="lead-card-name">${escapeHtml(lead.name)}</span>
                     <span class="badge badge-${(lead.leadType || '').toLowerCase()}">${lead.leadType || 'N/A'}</span>
@@ -988,22 +1054,127 @@
                     <span><i class="fas fa-sync-alt"></i> Updates: ${lead.updateCount || 0}</span>
                 </div>
                 <div class="lead-actions" onclick="event.stopPropagation()">
-                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${encryptedId}')"><i class="fas fa-eye"></i> View</button>
-                    ${showUpdateBtn ? `<button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${encryptedId}', ${isAdmin})"><i class="fas fa-edit"></i> Update</button>` : ''}
-                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${encryptedId}')"><i class="fas fa-history"></i> History</button>
-                    ${isAdmin ? `<button class="btn btn-danger btn-xs" onclick="deleteLead('${encryptedId}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
+                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${lead.id}')"><i class="fas fa-eye"></i> View</button>
+                    ${showUpdateBtn ? `<button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${lead.id}', ${isAdmin})"><i class="fas fa-edit"></i> Update</button>` : ''}
+                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${lead.id}')"><i class="fas fa-history"></i> History</button>
+                    ${isAdmin ? `<button class="btn btn-danger btn-xs" onclick="deleteLead('${lead.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
                 </div>
             </div>
         `;
     }
 
     // ============================================================
+    // UNIFIED LEAD SEARCH (NEW)
+    // ============================================================
+    let searchTimeout;
+    
+    function searchLeads(page = 0) {
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+            currentLeadsPage = page;
+            
+            const name = document.getElementById('leads-search')?.value || '';
+            const leadType = document.getElementById('leads-type-filter')?.value || '';
+            const leadStage = document.getElementById('leads-stage-filter')?.value || '';
+            const assignedEmployeeId = document.getElementById('leads-employee-filter')?.value || '';
+            const nextFollowUpDate = document.getElementById('leads-followup-date')?.value || '';
+            
+            const params = new URLSearchParams();
+            if (name) params.append('name', name);
+            if (leadType) params.append('leadType', leadType);
+            if (leadStage) params.append('leadStage', leadStage);
+            if (assignedEmployeeId) params.append('assignedEmployeeId', assignedEmployeeId);
+            if (nextFollowUpDate) params.append('nextFollowUpDate', nextFollowUpDate);
+            params.append('page', page);
+            params.append('size', currentLeadsSize);
+            params.append('sortBy', 'createdAt');
+            params.append('sortDir', 'desc');
+            
+            try {
+                const res = await api('GET', `/api/admin/leads/search?${params.toString()}`);
+                const pageData = res.data;
+                currentLeadsTotal = pageData.totalElements;
+                document.getElementById('leads-count-sub').textContent = `${currentLeadsTotal} total leads`;
+                renderLeadsTable(pageData.content);
+                renderPagination('leads-pagination', currentLeadsPage, currentLeadsTotal, currentLeadsSize, searchLeads);
+            } catch (err) {
+                toast('Error searching leads: ' + err.message, 'error');
+            }
+        }, 300);
+    }
+    
+    function renderLeadsTable(leads) {
+        const tbody = document.getElementById('leads-table-body');
+        if (!leads || leads.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8">No leads found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = leads.map(l => `
+            <tr>
+                <td><strong>${escapeHtml(l.name)}</strong><br><small>${escapeHtml(l.email)}</small><br><small>📞 ${l.phoneNumber}</small></td>
+                <td><span class="badge badge-${(l.leadType || '').toLowerCase()}">${l.leadType || 'N/A'}</span></td>
+                <td><span class="badge badge-${(l.leadStage || '').toLowerCase()}">${l.leadStage || 'N/A'}</span></td>
+                <td>${l.assignedEmployee?.firstName || '-'} ${l.assignedEmployee?.lastName || ''}</td>
+                <td><span class="badge badge-website">${escapeHtml(l.source || '-')}</span></td>
+                <td>${formatDate(l.nextFollowUpDate)}<br><small>${escapeHtml((l.nextFollowUp || '').substring(0, 30))}</small></td>
+                <td>📞 ${l.callsMadeCount || 0} | 📅 ${l.meetingsBookedCount || 0} | ✅ ${l.meetingsDoneCount || 0}</td>
+                <td>
+                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${l.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${l.id}', true)"><i class="fas fa-edit"></i> Update</button>
+                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${l.id}')"><i class="fas fa-history"></i> History</button>
+                    <button class="btn btn-danger btn-xs" onclick="deleteLead('${l.id}')"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function renderPagination(containerId, currentPage, totalElements, pageSize, callback) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        const totalPages = Math.ceil(totalElements / pageSize);
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        if (currentPage > 0) {
+            html += `<button onclick="searchLeads(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+        }
+        
+        const startPage = Math.max(0, currentPage - 2);
+        const endPage = Math.min(totalPages - 1, currentPage + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<button class="${i === currentPage ? 'active' : ''}" onclick="searchLeads(${i})">${i + 1}</button>`;
+        }
+        
+        if (currentPage < totalPages - 1) {
+            html += `<button onclick="searchLeads(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    function resetLeadFilters() {
+        document.getElementById('leads-search').value = '';
+        document.getElementById('leads-type-filter').value = '';
+        document.getElementById('leads-stage-filter').value = '';
+        document.getElementById('leads-employee-filter').value = '';
+        document.getElementById('leads-followup-date').value = '';
+        searchLeads(0);
+    }
+    
+    // ============================================================
     // ENHANCED LEAD HISTORY FUNCTIONS
     // ============================================================
-    
     async function viewLeadHistory(id) {
         const content = document.getElementById('lead-history-content');
         const leadInfoDiv = document.getElementById('history-lead-info');
+        if (!content) return;
+        
         content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading history...</div>';
         openModal('lead-history-modal');
         currentHistoryFilter = 'all';
@@ -1017,21 +1188,23 @@
             const leadRes = await api('GET', `/api/admin/leads/${id}`);
             currentHistoryLead = leadRes.data;
             
-            leadInfoDiv.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <div>
-                        <strong style="font-size: 16px;">${escapeHtml(currentHistoryLead.name)}</strong>
-                        <div style="font-size: 12px; color: var(--text2); margin-top: 4px;">
-                            ${escapeHtml(currentHistoryLead.email)} | ${currentHistoryLead.phoneNumber}
+            if (leadInfoDiv) {
+                leadInfoDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <strong style="font-size: 16px;">${escapeHtml(currentHistoryLead.name)}</strong>
+                            <div style="font-size: 12px; color: var(--text2); margin-top: 4px;">
+                                ${escapeHtml(currentHistoryLead.email)} | ${currentHistoryLead.phoneNumber}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <span class="badge badge-${(currentHistoryLead.leadType || '').toLowerCase()}">${currentHistoryLead.leadType || 'N/A'}</span>
+                            <span class="badge badge-${(currentHistoryLead.leadStage || '').toLowerCase()}">${currentHistoryLead.leadStage || 'N/A'}</span>
+                            <span class="badge badge-website">${escapeHtml(currentHistoryLead.source || 'N/A')}</span>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 12px;">
-                        <span class="badge badge-${(currentHistoryLead.leadType || '').toLowerCase()}">${currentHistoryLead.leadType || 'N/A'}</span>
-                        <span class="badge badge-${(currentHistoryLead.leadStage || '').toLowerCase()}">${currentHistoryLead.leadStage || 'N/A'}</span>
-                        <span class="badge badge-website">${escapeHtml(currentHistoryLead.source || 'N/A')}</span>
-                    </div>
-                </div>
-            `;
+                `;
+            }
             
             const historyRes = await api('GET', `/api/admin/leads/${id}/history`);
             currentHistoryData = historyRes.data || [];
@@ -1041,7 +1214,7 @@
             
         } catch (err) {
             content.innerHTML = `<div class="empty-state">Error loading history: ${err.message}</div>`;
-            leadInfoDiv.innerHTML = '';
+            if (leadInfoDiv) leadInfoDiv.innerHTML = '';
         }
     }
     
@@ -1064,6 +1237,7 @@
     
     function renderHistoryTimeline(historyData) {
         const content = document.getElementById('lead-history-content');
+        if (!content) return;
         
         if (!historyData || historyData.length === 0) {
             content.innerHTML = '<div class="empty-state">No history records found for this filter</div>';
@@ -1083,7 +1257,6 @@
                             ${getActionBadge(item.action)}
                             <div class="history-time">
                                 <i class="fas fa-calendar-alt"></i> ${formatDateTime(item.createdAt)}
-                                <i class="fas fa-clock" style="margin-left: 8px;"></i> ${formatTimeAgo(item.createdAt)}
                             </div>
                         </div>
                         <div class="history-time">
@@ -1127,23 +1300,7 @@
         }
         
         if (changes.length === 0 && item.changes) {
-            const changeText = item.changes;
-            const fieldPatterns = [
-                /(\w+):\s*'([^']*)'\s*→\s*'([^']*)'/g,
-                /(\w+)\s+changed\s+from\s+([^,]+?)\s+to\s+([^,]+?)(?:,|$)/gi,
-                /(\w+)\s+updated\s+from\s+['"]?([^'"]+)['"]?\s+to\s+['"]?([^'"]+)['"]?/gi
-            ];
-            
-            for (const pattern of fieldPatterns) {
-                let match;
-                while ((match = pattern.exec(changeText)) !== null) {
-                    changes.push({ field: match[1], oldValue: match[2], newValue: match[3] });
-                }
-            }
-            
-            if (changes.length === 0 && changeText) {
-                changes.push({ field: 'Details', oldValue: '', newValue: changeText });
-            }
+            changes.push({ field: 'Details', oldValue: '', newValue: item.changes });
         }
         
         return changes;
@@ -1151,6 +1308,7 @@
     
     function renderHistorySummary(historyData) {
         const summaryDiv = document.getElementById('history-summary');
+        if (!summaryDiv) return;
         if (!historyData || historyData.length === 0) { summaryDiv.innerHTML = ''; return; }
         
         const totalUpdates = historyData.length;
@@ -1158,7 +1316,6 @@
         const updateCount = historyData.filter(h => h.action === 'UPDATE').length;
         const stageChanges = historyData.filter(h => h.action === 'STAGE_CHANGE').length;
         const contacts = historyData.filter(h => h.action === 'CONTACT_MADE').length;
-        const statistics = historyData.filter(h => h.action === 'STATISTICS_UPDATE').length;
         const uniqueUsers = [...new Set(historyData.map(h => h.employee?.email || 'System'))];
         
         summaryDiv.innerHTML = `
@@ -1168,7 +1325,6 @@
                 <div class="stat-card"><div class="stat-value">${updateCount}</div><div class="stat-label">Updates</div></div>
                 <div class="stat-card"><div class="stat-value">${stageChanges}</div><div class="stat-label">Stage Changes</div></div>
                 <div class="stat-card"><div class="stat-value">${contacts}</div><div class="stat-label">Contacts Made</div></div>
-                <div class="stat-card"><div class="stat-value">${statistics}</div><div class="stat-label">Statistics Updates</div></div>
             </div>
             <div style="margin-top: 12px; font-size: 12px; color: var(--text2); text-align: center;">
                 <i class="fas fa-users"></i> Contributors: ${uniqueUsers.length} unique user(s)
@@ -1176,34 +1332,22 @@
         `;
     }
     
-    function exportLeadHistory() {
-        if (!currentHistoryData || currentHistoryData.length === 0) {
-            toast('No history data to export', 'warning');
-            return;
-        }
-        
-        let csvContent = "Date,Time,Action,Employee,Email,Changes,Remarks,Previous Stage,New Stage\n";
-        for (const item of currentHistoryData) {
-            const date = new Date(item.createdAt);
-            const dateStr = date.toLocaleDateString('en-IN');
-            const timeStr = date.toLocaleTimeString('en-IN');
-            const employeeName = item.employee ? `${item.employee.firstName} ${item.employee.lastName}` : 'System';
-            const employeeEmail = item.employee?.email || '';
-            const changes = item.changes?.replace(/,/g, ';') || '';
-            const remarks = item.remarks?.replace(/,/g, ';') || '';
-            csvContent += `"${dateStr}","${timeStr}","${item.action}","${employeeName}","${employeeEmail}","${changes}","${remarks}","${item.previousStage || ''}","${item.newStage || ''}"\n`;
-        }
-        
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `lead_history_${currentHistoryLead?.id || 'export'}_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toast('History exported successfully!', 'success');
+    function getActionBadge(action) {
+        const badges = {
+            'CREATE': 'badge-create', 'UPDATE': 'badge-update', 'STAGE_CHANGE': 'badge-stage',
+            'STATISTICS_UPDATE': 'badge-stat', 'CONTACT_MADE': 'badge-contact', 'FOLLOWUP_UPDATE': 'badge-info'
+        };
+        const icons = {
+            'CREATE': 'fa-plus-circle', 'UPDATE': 'fa-edit', 'STAGE_CHANGE': 'fa-exchange-alt',
+            'STATISTICS_UPDATE': 'fa-chart-line', 'CONTACT_MADE': 'fa-phone', 'FOLLOWUP_UPDATE': 'fa-calendar-check'
+        };
+        const labels = {
+            'CREATE': 'Lead Created', 'UPDATE': 'Lead Updated', 'STAGE_CHANGE': 'Stage Changed',
+            'STATISTICS_UPDATE': 'Statistics Updated', 'CONTACT_MADE': 'Contact Made', 'FOLLOWUP_UPDATE': 'Follow-up Updated'
+        };
+        return `<span class="history-badge ${badges[action] || 'badge-info'}">
+            <i class="fas ${icons[action] || 'fa-history'}"></i> ${labels[action] || action}
+        </span>`;
     }
 
     // ============================================================
@@ -1270,10 +1414,27 @@
             loadEmployees();
             loadContacts();
             loadLeadStatistics();
+            loadEmployeeFilter();
+             loadBanners();
+            searchLeads(0);
         } else {
             navActivate('section-my-profile');
             loadMyProfile();
             loadMyLeads();
+        }
+    }
+    
+    async function loadEmployeeFilter() {
+        try {
+            const res = await api('GET', '/api/admin/employees/active');
+            const employees = res.data || [];
+            const select = document.getElementById('leads-employee-filter');
+            if (select) {
+                select.innerHTML = '<option value="">All Employees</option>' +
+                    employees.map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)}</option>`).join('');
+            }
+        } catch (err) {
+            console.error('Error loading employee filter:', err);
         }
     }
 
@@ -1286,15 +1447,16 @@
         const nav = document.getElementById('sidebar-nav');
         if (currentRole === 'ADMIN') {
             nav.innerHTML = `
-                <div class="nav-item" onclick="navActivate('section-dashboard'); loadDashboard()"><i class="fas fa-chart-pie"></i> Dashboard</div>
-                <div class="nav-item" onclick="navActivate('section-employees'); loadEmployees()"><i class="fas fa-users"></i> Employees</div>
-                <div class="nav-item" onclick="navActivate('section-contacts'); loadContacts()"><i class="fas fa-address-book"></i> Contacts</div>
-                <div class="nav-item" onclick="navActivate('section-leads'); loadLeads()"><i class="fas fa-funnel-dollar"></i> All Leads</div>
-                <div class="nav-item" onclick="navActivate('section-website-leads'); loadWebsiteLeads()"><i class="fas fa-globe"></i> Website Leads</div>
-                <div class="nav-item" onclick="navActivate('section-followups'); loadFollowUps()"><i class="fas fa-calendar-check"></i> Follow-ups</div>
-                <div class="nav-item" onclick="navActivate('section-lead-stats'); loadLeadStatistics()"><i class="fas fa-chart-line"></i> Analytics</div>
-                <div class="nav-item" onclick="navActivate('section-change-password')"><i class="fas fa-key"></i> Change Password</div>
-            `;
+        <div class="nav-item" onclick="navActivate('section-dashboard'); loadDashboard()"><i class="fas fa-chart-pie"></i> Dashboard</div>
+        <div class="nav-item" onclick="navActivate('section-employees'); loadEmployees()"><i class="fas fa-users"></i> Employees</div>
+        <div class="nav-item" onclick="navActivate('section-contacts'); loadContacts()"><i class="fas fa-address-book"></i> Contacts</div>
+        <div class="nav-item" onclick="navActivate('section-leads'); searchLeads(0)"><i class="fas fa-funnel-dollar"></i> All Leads</div>
+        <div class="nav-item" onclick="navActivate('section-website-leads'); loadWebsiteLeads()"><i class="fas fa-globe"></i> Website Leads</div>
+        <div class="nav-item" onclick="navActivate('section-followups'); loadFollowUps()"><i class="fas fa-calendar-check"></i> Follow-ups</div>
+        <div class="nav-item" onclick="navActivate('section-lead-stats'); loadLeadStatistics()"><i class="fas fa-chart-line"></i> Analytics</div>
+        <div class="nav-item" onclick="navActivate('section-banners'); loadBanners()"><i class="fas fa-images"></i> Banner Management</div>
+        <div class="nav-item" onclick="navActivate('section-change-password')"><i class="fas fa-key"></i> Change Password</div>
+    `;
         } else {
             nav.innerHTML = `
                 <div class="nav-item" onclick="navActivate('section-my-profile'); loadMyProfile()"><i class="fas fa-user-circle"></i> My Profile</div>
@@ -1308,11 +1470,6 @@
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById(sectionId).classList.add('active');
-        
-        const navItem = Array.from(document.querySelectorAll('.nav-item')).find(n =>
-            n.getAttribute('onclick')?.includes(sectionId.replace('section-', ''))
-        );
-        if (navItem) navItem.classList.add('active');
     }
 
     function showSection(id) { navActivate(id); }
@@ -1323,16 +1480,16 @@
     async function loadDashboard() {
         try {
             const [leadsRes, statsRes, websiteStatsRes, todayRes] = await Promise.all([
-                api('GET', '/api/admin/leads'),
+                api('GET', '/api/admin/leads/search?page=0&size=100'),
                 api('GET', '/api/admin/leads/statistics'),
                 api('GET', '/api/admin/website-leads/statistics'),
-                api('GET', '/api/admin/leads/followups/today')
+                api('GET', '/api/admin/leads/search?nextFollowUpDate=' + new Date().toISOString().split('T')[0] + '&page=0&size=10')
             ]);
             
-            const leads = leadsRes.data || [];
+            const leads = leadsRes.data?.content || [];
             const stats = statsRes.data || {};
             const websiteStats = websiteStatsRes.data || {};
-            allLeads = leads;
+            const todayLeads = todayRes.data?.content || [];
             
             document.getElementById('dashboard-stats').innerHTML = `
                 <div class="stat-card"><div class="stat-value">${stats.total_leads || leads.length}</div><div class="stat-label">Total Active Leads</div></div>
@@ -1350,7 +1507,6 @@
                 <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> Performance</div></div><div class="card-body"><div>Total Calls: ${leads.reduce((sum, l) => sum + (l.callsMadeCount || 0), 0)}</div><div>Meetings Booked: ${leads.reduce((sum, l) => sum + (l.meetingsBookedCount || 0), 0)}</div><div>Meetings Completed: ${leads.reduce((sum, l) => sum + (l.meetingsDoneCount || 0), 0)}</div><div>Conversion Rate: ${leads.length ? Math.round((leads.filter(l => l.leadStage === 'INTERESTED').length / leads.length) * 100) : 0}%</div></div></div>
             `;
             
-            const todayLeads = todayRes.data || [];
             const container = document.getElementById('dashboard-today-followups');
             if (todayLeads.length === 0) {
                 container.innerHTML = '<div class="empty-state">No follow-ups scheduled for today</div>';
@@ -1374,7 +1530,7 @@
     }
 
     // ============================================================
-    // EMPLOYEES
+    // EMPLOYEES (Keep existing implementation)
     // ============================================================
     async function loadEmployees() {
         try {
@@ -1550,15 +1706,15 @@
     }
 
     // ============================================================
-    // CONTACTS MANAGEMENT
+    // CONTACTS MANAGEMENT (Keep existing implementation)
     // ============================================================
-    async function loadContacts(page = 0, size = 20) {
+    async function loadContacts(page = 0) {
         try {
-            const res = await api('GET', `/api/admin/contacts?page=${page}&size=${size}`);
+            const res = await api('GET', `/api/admin/contacts?page=${page}&size=20`);
             allContactsPageable = res.data;
-            allContacts = allContactsPageable.content || [];
             document.getElementById('contacts-count-sub').textContent = `${allContactsPageable.totalElements || 0} total contacts`;
-            renderContacts(allContacts);
+            renderContacts(allContactsPageable.content || []);
+            renderPagination('contacts-pagination', page, allContactsPageable.totalElements, 20, loadContacts);
         } catch (err) {
             toast('Error loading contacts: ' + err.message, 'error');
         }
@@ -1568,7 +1724,7 @@
         const search = document.getElementById('contacts-search').value.toLowerCase();
         const status = document.getElementById('contacts-status-filter').value;
         
-        const filtered = allContacts.filter(c => {
+        const filtered = (allContactsPageable.content || []).filter(c => {
             const matchSearch = !search || `${c.name} ${c.email} ${c.phoneNumber}`.toLowerCase().includes(search);
             const matchStatus = !status || (status === 'active' ? c.isActive : !c.isActive);
             return matchSearch && matchStatus;
@@ -1598,7 +1754,7 @@
                         `<button class="btn btn-warning btn-xs" onclick="deactivateContact('${c.id}')"><i class="fas fa-ban"></i></button>` :
                         `<button class="btn btn-success btn-xs" onclick="reactivateContact('${c.id}')"><i class="fas fa-play"></i></button>`
                     }
-                </td>
+                 </td>
             </tr>
         `).join('');
     }
@@ -1611,7 +1767,7 @@
     }
 
     function openEditContact(encryptedId) {
-        const contact = allContacts.find(c => c.id === encryptedId);
+        const contact = (allContactsPageable.content || []).find(c => c.id === encryptedId);
         if (!contact) { toast('Contact not found', 'error'); return; }
         
         document.getElementById('contact-modal-title').textContent = 'Edit Contact';
@@ -1697,7 +1853,7 @@
     }
 
     async function reactivateContact(encryptedId) {
-        const contact = allContacts.find(c => c.id === encryptedId);
+        const contact = (allContactsPageable.content || []).find(c => c.id === encryptedId);
         if (!contact) return;
         
         try {
@@ -1716,7 +1872,7 @@
     }
 
     // ============================================================
-    // WEBSITE LEADS
+    // WEBSITE LEADS (Keep existing implementation)
     // ============================================================
     async function loadWebsiteLeads() {
         try {
@@ -1750,84 +1906,7 @@
             return;
         }
         
-        container.innerHTML = leads.map(l => `
-            <div class="lead-card" onclick="viewLeadDetail('${l.id}')">
-                <div class="lead-card-header">
-                    <span class="lead-card-name">${escapeHtml(l.name)}</span>
-                    <span class="badge badge-website">🌐 Website</span>
-                </div>
-                <div class="lead-card-detail"><i class="fas fa-envelope"></i> ${escapeHtml(l.email)}</div>
-                <div class="lead-card-detail"><i class="fas fa-phone"></i> ${l.phoneNumber}</div>
-                <div class="lead-card-detail"><i class="fas fa-user-tie"></i> Assigned: <strong>${l.assignedEmployee?.firstName || 'Unassigned'} ${l.assignedEmployee?.lastName || ''}</strong></div>
-                <div class="lead-card-detail">
-                    <span class="badge badge-${(l.leadType || '').toLowerCase()}">${l.leadType || 'N/A'}</span>
-                    <span class="badge badge-${(l.leadStage || '').toLowerCase()}">${l.leadStage || 'N/A'}</span>
-                </div>
-                <div class="lead-card-footer">
-                    <span><i class="fas fa-calendar"></i> Created: ${formatDate(l.createdAt)}</span>
-                    <span><i class="fas fa-calendar-alt"></i> Follow-up: ${formatDate(l.nextFollowUpDate)}</span>
-                </div>
-                <div class="lead-actions" onclick="event.stopPropagation()">
-                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${l.id}')"><i class="fas fa-eye"></i> View</button>
-                    <button class="btn btn-primary btn-xs" onclick="openWebsiteLeadUpdate('${l.id}')"><i class="fas fa-edit"></i> Update</button>
-                    <button class="btn btn-purple btn-xs" onclick="assignWebsiteLead('${l.id}')"><i class="fas fa-user-plus"></i> Assign</button>
-                    <button class="btn btn-danger btn-xs" onclick="deleteWebsiteLead('${l.id}')"><i class="fas fa-trash"></i></button>
-                    <button class="btn btn-info btn-xs" onclick="viewLeadHistory('${l.id}')"><i class="fas fa-history"></i> History</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    async function openWebsiteLeadUpdate(id) {
-        document.getElementById('wl-update-id').value = id;
-        if (!allEmployees.length) await loadEmployees();
-        
-        const empSelect = document.getElementById('wl-employee');
-        empSelect.innerHTML = '<option value="">No change</option>' +
-            allEmployees.filter(e => e.isActive).map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)}</option>`).join('');
-        
-        openModal('website-lead-update-modal');
-    }
-
-    async function submitWebsiteLeadUpdate() {
-        const id = document.getElementById('wl-update-id').value;
-        const body = {};
-        
-        const type = document.getElementById('wl-type').value;
-        const stage = document.getElementById('wl-stage').value;
-        const empId = document.getElementById('wl-employee').value;
-        const followupDate = document.getElementById('wl-followup-date').value;
-        const followupNotes = document.getElementById('wl-followup-notes').value;
-        const remarks = document.getElementById('wl-remarks').value;
-        
-        if (type) body.leadType = type;
-        if (stage) body.leadStage = stage;
-        if (empId) body.assignedEmployeeId = empId;
-        if (followupDate) body.nextFollowUpDate = followupDate;
-        if (followupNotes) body.nextFollowUp = followupNotes;
-        if (remarks) body.remarks = remarks;
-        
-        try {
-            await api('PUT', `/api/admin/website-leads/${id}`, body);
-            toast('Website lead updated successfully!');
-            closeModal('website-lead-update-modal');
-            await loadWebsiteLeads();
-        } catch (err) {
-            toast(err.message, 'error');
-        }
-    }
-
-    async function assignWebsiteLead(id) {
-        const empId = prompt('Enter Employee ID to assign this lead to:');
-        if (!empId) return;
-        
-        try {
-            await api('PATCH', `/api/admin/website-leads/${id}/assign?employeeId=${empId}`, null);
-            toast('Lead assigned successfully!');
-            await loadWebsiteLeads();
-        } catch (err) {
-            toast(err.message, 'error');
-        }
+        container.innerHTML = leads.map(l => renderFullLeadCard(l, true, true)).join('');
     }
 
     async function deleteWebsiteLead(id) {
@@ -1842,59 +1921,8 @@
     }
 
     // ============================================================
-    // LEADS MANAGEMENT
+    // CREATE/UPDATE LEAD
     // ============================================================
-    async function loadLeads() {
-        try {
-            const res = await api('GET', '/api/admin/leads');
-            allLeads = res.data || [];
-            document.getElementById('leads-count-sub').textContent = `${allLeads.length} total leads`;
-            renderLeadsTable(allLeads);
-        } catch (err) {
-            toast('Error: ' + err.message, 'error');
-        }
-    }
-
-    function filterLeads() {
-        const search = document.getElementById('leads-search').value.toLowerCase();
-        const type = document.getElementById('leads-type-filter').value;
-        const stage = document.getElementById('leads-stage-filter').value;
-        
-        const filtered = allLeads.filter(l => {
-            const matchSearch = !search || `${l.name} ${l.email}`.toLowerCase().includes(search);
-            const matchType = !type || l.leadType === type;
-            const matchStage = !stage || l.leadStage === stage;
-            return matchSearch && matchType && matchStage;
-        });
-        renderLeadsTable(filtered);
-    }
-
-    function renderLeadsTable(leads) {
-        const tbody = document.getElementById('leads-table-body');
-        if (!leads.length) {
-            tbody.innerHTML = '<tr><td colspan="8">No leads found</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = leads.map(l => `
-            <tr>
-                <td><strong>${escapeHtml(l.name)}</strong><br><small>${escapeHtml(l.email)}</small><br><small>📞 ${l.phoneNumber}</small></td>
-                <td><span class="badge badge-${(l.leadType || '').toLowerCase()}">${l.leadType || 'N/A'}</span></td>
-                <td><span class="badge badge-${(l.leadStage || '').toLowerCase()}">${l.leadStage || 'N/A'}</span></td>
-                <td>${l.assignedEmployee?.firstName || '-'} ${l.assignedEmployee?.lastName || ''}</td>
-                <td><span class="badge badge-website">${escapeHtml(l.source || '-')}</span></td>
-                <td>${formatDate(l.nextFollowUpDate)}<br><small>${escapeHtml(l.nextFollowUp?.substring(0, 30) || '-')}</small></td>
-                <td>📞 ${l.callsMadeCount || 0} | 📅 ${l.meetingsBookedCount || 0} | ✅ ${l.meetingsDoneCount || 0}</td>
-                <td>
-                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${l.id}')"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${l.id}', true)"><i class="fas fa-edit"></i> Update</button>
-                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${l.id}')"><i class="fas fa-history"></i> History</button>
-                    <button class="btn btn-danger btn-xs" onclick="deleteLead('${l.id}')"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
     function openCreateLead() {
         document.getElementById('lead-modal-title').textContent = 'Add New Lead';
         document.getElementById('lead-form').reset();
@@ -1935,14 +1963,25 @@
                 toast('Lead created successfully!');
             }
             closeModal('lead-modal');
-            await loadLeads();
+            searchLeads(currentLeadsPage);
             if (document.getElementById('section-dashboard').classList.contains('active')) loadDashboard();
         } catch (err) {
             toast(err.message, 'error');
         }
     }
 
-    // ENHANCED LEAD DETAIL VIEW WITH CONTACT INFORMATION
+    async function deleteLead(id) {
+        if (!confirm('Delete this lead? This will soft delete the lead.')) return;
+        try {
+            await api('DELETE', `/api/admin/leads/${id}`);
+            toast('Lead deleted successfully');
+            searchLeads(currentLeadsPage);
+            if (document.getElementById('section-dashboard').classList.contains('active')) loadDashboard();
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
     async function viewLeadDetail(id) {
         const content = document.getElementById('lead-detail-content');
         content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading...</div>';
@@ -1953,7 +1992,6 @@
             const res = await api('GET', endpoint);
             const l = res.data;
             
-            // If contact info is available, fetch contact details
             let contactHtml = '';
             if (l.contactId) {
                 try {
@@ -1966,13 +2004,11 @@
                                 <div class="info-item"><div class="info-label">Contact Name</div><div class="info-value">${escapeHtml(contact.name)}</div></div>
                                 <div class="info-item"><div class="info-label">Contact Email</div><div class="info-value">${escapeHtml(contact.email)}</div></div>
                                 <div class="info-item"><div class="info-label">Contact Phone</div><div class="info-value">${contact.phoneNumber}</div></div>
-                                <div class="info-item"><div class="info-label">Total Leads</div><div class="info-value"><span class="badge badge-info">${contact.totalLeads || 0} leads</span> <button class="btn btn-outline btn-xs" onclick="event.stopPropagation(); viewContactDetail('${l.contactId}')">View All Leads</button></div></div>
+                                <div class="info-item"><div class="info-label">Total Leads</div><div class="info-value"><span class="badge badge-info">${contact.totalLeads || 0} leads</span></div></div>
                             </div>
                         </div>
                     `;
-                } catch (err) {
-                    contactHtml = `<div class="contact-card"><h4><i class="fas fa-address-card"></i> Contact Information</h4><div class="info-value">Could not load contact details</div></div>`;
-                }
+                } catch (err) {}
             }
             
             content.innerHTML = `
@@ -2000,22 +2036,9 @@
                     <div class="info-item"><div class="info-label">Created At</div><div class="info-value">${formatDateTime(l.createdAt)}</div></div>
                     <div class="info-item"><div class="info-label">Last Updated</div><div class="info-value">${formatDateTime(l.updatedAt)}</div></div>
                 </div>
-                ${l.serviceDescription ? `<hr style="border-color: var(--border); margin: 20px 0;"><div class="info-item col-span-2"><div class="info-label">Service Details</div><div class="info-value">${escapeHtml(l.serviceDescription)}</div></div>` : ''}
             `;
         } catch (err) {
             content.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
-        }
-    }
-
-    async function deleteLead(id) {
-        if (!confirm('Delete this lead? This will soft delete the lead.')) return;
-        try {
-            await api('DELETE', `/api/admin/leads/${id}`);
-            toast('Lead deleted successfully');
-            await loadLeads();
-            if (document.getElementById('section-dashboard').classList.contains('active')) loadDashboard();
-        } catch (err) {
-            toast(err.message, 'error');
         }
     }
 
@@ -2024,26 +2047,27 @@
     // ============================================================
     async function loadFollowUps() {
         try {
+            const today = new Date().toISOString().split('T')[0];
             const [todayRes, pendingRes] = await Promise.all([
-                api('GET', '/api/admin/leads/followups/today'),
-                api('GET', '/api/admin/leads/followups/pending')
+                api('GET', `/api/admin/leads/search?nextFollowUpDate=${today}&page=0&size=50`),
+                api('GET', `/api/admin/leads/search?followUpTo=${new Date(Date.now() - 86400000).toISOString().split('T')[0]}&page=0&size=50`)
             ]);
             
-            const today = todayRes.data || [];
-            const pending = pendingRes.data || [];
+            const todayLeads = todayRes.data?.content || [];
+            const pendingLeads = pendingRes.data?.content || [];
             
             const todayContainer = document.getElementById('todays-followups');
-            if (today.length === 0) {
+            if (todayLeads.length === 0) {
                 todayContainer.innerHTML = '<div class="empty-state">No follow-ups scheduled for today</div>';
             } else {
-                todayContainer.innerHTML = today.map(l => renderFullLeadCard(l, true, true)).join('');
+                todayContainer.innerHTML = todayLeads.map(l => renderFullLeadCard(l, true, true)).join('');
             }
             
             const pendingContainer = document.getElementById('pending-followups');
-            if (pending.length === 0) {
+            if (pendingLeads.length === 0) {
                 pendingContainer.innerHTML = '<div class="empty-state">No overdue follow-ups</div>';
             } else {
-                pendingContainer.innerHTML = pending.map(l => renderFullLeadCard(l, true, true)).join('');
+                pendingContainer.innerHTML = pendingLeads.map(l => renderFullLeadCard(l, true, true)).join('');
             }
         } catch (err) {
             toast('Error loading follow-ups: ' + err.message, 'error');
@@ -2085,8 +2109,8 @@
         if (!startDate || !endDate) return;
         
         try {
-            const res = await api('GET', `/api/admin/leads/date-range?startDate=${startDate}&endDate=${endDate}`);
-            const leads = res.data || [];
+            const res = await api('GET', `/api/admin/leads/search?createdFrom=${startDate}&createdTo=${endDate}&page=0&size=50`);
+            const leads = res.data?.content || [];
             
             const container = document.getElementById('date-range-leads');
             if (!leads.length) {
@@ -2204,12 +2228,20 @@
 
     async function openLeadUpdateModal(id, isAdmin = false) {
         document.getElementById('update-lead-id').value = id;
-        ['upd-contact-made', 'upd-call', 'upd-meeting-booked', 'upd-meeting-done', 'upd-convert'].forEach(ckId => document.getElementById(ckId).checked = false);
-        document.getElementById('upd-response').value = '';
-        document.getElementById('upd-followup-date').value = '';
-        document.getElementById('upd-followup-desc').value = '';
-        document.getElementById('upd-stage').value = '';
-        document.getElementById('upd-remarks').value = '';
+        ['upd-contact-made', 'upd-call', 'upd-meeting-booked', 'upd-meeting-done', 'upd-convert'].forEach(ckId => {
+            const el = document.getElementById(ckId);
+            if (el) el.checked = false;
+        });
+        const responseEl = document.getElementById('upd-response');
+        if (responseEl) responseEl.value = '';
+        const followupDateEl = document.getElementById('upd-followup-date');
+        if (followupDateEl) followupDateEl.value = '';
+        const followupDescEl = document.getElementById('upd-followup-desc');
+        if (followupDescEl) followupDescEl.value = '';
+        const stageEl = document.getElementById('upd-stage');
+        if (stageEl) stageEl.value = '';
+        const remarksEl = document.getElementById('upd-remarks');
+        if (remarksEl) remarksEl.value = '';
         
         window.currentUpdateIsAdmin = isAdmin;
         openModal('lead-update-modal');
@@ -2220,16 +2252,16 @@
         const isAdminUpdate = window.currentUpdateIsAdmin || currentRole === 'ADMIN';
         
         const body = {
-            contactMade: document.getElementById('upd-contact-made').checked,
-            callsMade: document.getElementById('upd-call').checked,
-            meetingBooked: document.getElementById('upd-meeting-booked').checked,
-            meetingDone: document.getElementById('upd-meeting-done').checked,
-            convertToCustomer: document.getElementById('upd-convert').checked,
-            responseMessage: document.getElementById('upd-response').value || null,
-            nextFollowUpDate: document.getElementById('upd-followup-date').value || null,
-            nextFollowUpDescription: document.getElementById('upd-followup-desc').value || null,
-            newLeadStage: document.getElementById('upd-stage').value || null,
-            remarks: document.getElementById('upd-remarks').value || null
+            contactMade: document.getElementById('upd-contact-made')?.checked || false,
+            callsMade: document.getElementById('upd-call')?.checked || false,
+            meetingBooked: document.getElementById('upd-meeting-booked')?.checked || false,
+            meetingDone: document.getElementById('upd-meeting-done')?.checked || false,
+            convertToCustomer: document.getElementById('upd-convert')?.checked || false,
+            responseMessage: document.getElementById('upd-response')?.value || null,
+            nextFollowUpDate: document.getElementById('upd-followup-date')?.value || null,
+            nextFollowUpDescription: document.getElementById('upd-followup-desc')?.value || null,
+            newLeadStage: document.getElementById('upd-stage')?.value || null,
+            remarks: document.getElementById('upd-remarks')?.value || null
         };
         
         try {
@@ -2245,7 +2277,7 @@
             closeModal('lead-update-modal');
             
             if (currentRole === 'ADMIN') {
-                await loadLeads();
+                searchLeads(currentLeadsPage);
                 if (document.getElementById('section-dashboard').classList.contains('active')) loadDashboard();
             } else {
                 await loadMyLeads();
@@ -2264,7 +2296,8 @@
         if (/[A-Z]/.test(val)) strength++;
         if (/[0-9]/.test(val)) strength++;
         if (/[@#$%^&+=!]/.test(val)) strength++;
-        document.getElementById('pass-strength-bar').style.width = (strength * 25) + '%';
+        const bar = document.getElementById('pass-strength-bar');
+        if (bar) bar.style.width = (strength * 25) + '%';
     }
 
     async function handleChangePassword(e) {
@@ -2311,6 +2344,252 @@
             if (e.target === overlay) overlay.classList.remove('open');
         });
     });
+    
+    
+    
+    // ============================================================
+// BANNER MANAGEMENT FUNCTIONS
+// ============================================================
+
+let allBanners = [];
+let currentBannerPage = 0;
+let currentBannerSize = 12;
+let currentBannerTotal = 0;
+
+async function loadBanners(page = 0) {
+    currentBannerPage = page;
+    try {
+        const res = await api('GET', `/api/admin/banners?page=${page}&size=${currentBannerSize}&sortBy=displayOrder&sortDir=asc`);
+        const pageData = res.data;
+        allBanners = pageData.content || [];
+        currentBannerTotal = pageData.totalElements;
+        renderBanners(allBanners);
+        renderPagination('banners-pagination', currentBannerPage, currentBannerTotal, currentBannerSize, loadBanners);
+    } catch (err) {
+        toast('Error loading banners: ' + err.message, 'error');
+    }
+}
+
+function filterBanners() {
+    const search = document.getElementById('banner-search').value.toLowerCase();
+    const status = document.getElementById('banner-status-filter').value;
+    
+    let filtered = allBanners;
+    if (search) {
+        filtered = filtered.filter(b => b.description.toLowerCase().includes(search));
+    }
+    if (status) {
+        filtered = filtered.filter(b => status === 'active' ? b.isActive : !b.isActive);
+    }
+    renderBanners(filtered);
+}
+
+function renderBanners(banners) {
+    const container = document.getElementById('banners-grid');
+    if (!banners || banners.length === 0) {
+        container.innerHTML = '<div class="empty-state">No banners found. Click "Add New Banner" to create one.</div>';
+        return;
+    }
+    
+    container.innerHTML = banners.map(banner => `
+        <div class="lead-card" onclick="viewBannerDetail(${banner.id})">
+            <div class="lead-card-header">
+                <span class="lead-card-name">Banner #${banner.id}</span>
+                <span class="badge ${banner.isActive ? 'badge-active' : 'badge-inactive'}">
+                    ${banner.isActive ? 'Active' : 'Inactive'}
+                </span>
+            </div>
+            <img src="${banner.imageUrl}" alt="Banner" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 12px;" onerror="this.src='https://via.placeholder.com/400x150?text=No+Image'">
+            <div class="lead-card-detail">
+                <i class="fas fa-align-left"></i> ${escapeHtml(banner.description.substring(0, 80))}${banner.description.length > 80 ? '...' : ''}
+            </div>
+            <div class="lead-card-detail">
+                <i class="fas fa-sort-numeric-down"></i> Order: ${banner.displayOrder || 0}
+            </div>
+            <div class="lead-card-footer">
+                <span><i class="fas fa-eye"></i> ${banner.viewCount || 0} views</span>
+                <span><i class="fas fa-calendar"></i> ${formatDate(banner.createdAt)}</span>
+            </div>
+            <div class="lead-actions" onclick="event.stopPropagation()">
+                <button class="btn btn-outline btn-xs" onclick="viewBannerDetail(${banner.id})"><i class="fas fa-eye"></i> View</button>
+                <button class="btn btn-primary btn-xs" onclick="openEditBanner(${banner.id})"><i class="fas fa-edit"></i> Edit</button>
+                ${banner.isActive ?
+                    `<button class="btn btn-warning btn-xs" onclick="deactivateBanner(${banner.id})"><i class="fas fa-ban"></i> Deactivate</button>` :
+                    `<button class="btn btn-success btn-xs" onclick="activateBanner(${banner.id})"><i class="fas fa-play"></i> Activate</button>`
+                }
+                <button class="btn btn-danger btn-xs" onclick="deleteBanner(${banner.id})"><i class="fas fa-trash-alt"></i> Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openCreateBanner() {
+    document.getElementById('banner-modal-title').textContent = 'Add New Banner';
+    document.getElementById('banner-form').reset();
+    document.getElementById('banner-id').value = '';
+    document.getElementById('banner-status').value = 'true';
+    document.getElementById('current-image-preview').style.display = 'none';
+    document.getElementById('banner-image').required = true;
+    openModal('banner-modal');
+}
+
+async function openEditBanner(id) {
+    try {
+        const res = await api('GET', `/api/admin/banners/${id}`);
+        const banner = res.data;
+        
+        document.getElementById('banner-modal-title').textContent = 'Edit Banner';
+        document.getElementById('banner-id').value = banner.id;
+        document.getElementById('banner-description').value = banner.description;
+        document.getElementById('banner-order').value = banner.displayOrder || 0;
+        document.getElementById('banner-status').value = banner.isActive ? 'true' : 'false';
+        document.getElementById('banner-image').required = false;
+        
+        // Show current image preview
+        if (banner.imageUrl) {
+            const preview = document.getElementById('image-preview');
+            preview.src = banner.imageUrl;
+            document.getElementById('current-image-preview').style.display = 'block';
+        } else {
+            document.getElementById('current-image-preview').style.display = 'none';
+        }
+        
+        openModal('banner-modal');
+    } catch (err) {
+        toast('Error loading banner: ' + err.message, 'error');
+    }
+}
+
+async function handleBannerSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('banner-id').value;
+    const description = document.getElementById('banner-description').value;
+    const displayOrder = document.getElementById('banner-order').value;
+    const isActive = document.getElementById('banner-status').value === 'true';
+    const imageFile = document.getElementById('banner-image').files[0];
+    
+    const formData = new FormData();
+    formData.append('description', description);
+    formData.append('displayOrder', displayOrder);
+    formData.append('isActive', isActive);
+    if (imageFile) {
+        formData.append('imageFile', imageFile);
+    }
+    
+    try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        let url, method;
+        if (id) {
+            url = `/api/admin/banners/${id}`;
+            method = 'PUT';
+        } else {
+            url = '/api/admin/banners';
+            method = 'POST';
+        }
+        
+        const res = await fetch(BASE + url, {
+            method: method,
+            headers: headers,
+            body: formData
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.message || data.error || 'Failed to save banner');
+        }
+        
+        toast(id ? 'Banner updated successfully!' : 'Banner created successfully!');
+        closeModal('banner-modal');
+        await loadBanners(currentBannerPage);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function viewBannerDetail(id) {
+    const content = document.getElementById('banner-detail-content');
+    content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading...</div>';
+    openModal('banner-detail-modal');
+    
+    try {
+        const res = await api('GET', `/api/admin/banners/${id}`);
+        const banner = res.data;
+        
+        content.innerHTML = `
+            <div class="info-grid">
+                <div class="info-item col-span-2">
+                    <div class="info-label">Banner Image</div>
+                    <img src="${banner.imageUrl}" alt="Banner" style="width: 100%; border-radius: var(--radius-sm);" onerror="this.src='https://via.placeholder.com/600x300?text=No+Image'">
+                </div>
+                <div class="info-item col-span-2">
+                    <div class="info-label">Description</div>
+                    <div class="info-value">${escapeHtml(banner.description)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Display Order</div>
+                    <div class="info-value">${banner.displayOrder || 0}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value"><span class="badge ${banner.isActive ? 'badge-active' : 'badge-inactive'}">${banner.isActive ? 'Active' : 'Inactive'}</span></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">View Count</div>
+                    <div class="info-value"><i class="fas fa-eye"></i> ${banner.viewCount || 0} views</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Created At</div>
+                    <div class="info-value">${formatDateTime(banner.createdAt)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Updated</div>
+                    <div class="info-value">${formatDateTime(banner.updatedAt)}</div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        content.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+    }
+}
+
+async function deactivateBanner(id) {
+    if (!confirm('Deactivate this banner? It will no longer appear on the website.')) return;
+    try {
+        await api('PATCH', `/api/admin/banners/${id}/deactivate`);
+        toast('Banner deactivated successfully');
+        await loadBanners(currentBannerPage);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function activateBanner(id) {
+    if (!confirm('Activate this banner? It will appear on the website.')) return;
+    try {
+        await api('PATCH', `/api/admin/banners/${id}/activate`);
+        toast('Banner activated successfully');
+        await loadBanners(currentBannerPage);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function deleteBanner(id) {
+    if (!confirm('⚠️ PERMANENT DELETE: This will completely remove the banner. Cannot undo! Continue?')) return;
+    try {
+        await api('DELETE', `/api/admin/banners/${id}`);
+        toast('Banner permanently deleted');
+        await loadBanners(currentBannerPage);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
 </script>
+
+<!-- Modal HTML Templates (Keep all modals from original) -->
+<!-- Add modal divs here - they should be the same as in your original login.html -->
+
 </body>
 </html>

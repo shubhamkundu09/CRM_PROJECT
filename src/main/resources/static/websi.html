@@ -75,6 +75,7 @@
             color: var(--text2);
             text-decoration: none;
             transition: color 0.3s;
+            cursor: pointer;
         }
 
         .nav-links a:hover {
@@ -103,6 +104,213 @@
             font-size: 18px;
             max-width: 600px;
             margin: 0 auto;
+        }
+
+        /* Banners Section */
+        .banners-section {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .view-all-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 24px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .view-all-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .banners-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .banner-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .banner-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+        }
+
+        .banner-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: var(--surface2);
+        }
+
+        .banner-content {
+            padding: 20px;
+        }
+
+        .banner-description {
+            color: var(--text2);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .banner-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text2);
+        }
+
+        .view-count {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .view-count i {
+            font-size: 12px;
+        }
+
+        .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--accent);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* All Banners Modal */
+        .banners-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .banners-modal.open {
+            display: flex;
+        }
+
+        .banners-modal-content {
+            max-width: 1200px;
+            width: 100%;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .banners-modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            z-index: 1;
+        }
+
+        .banners-modal-header h3 {
+            font-size: 24px;
+        }
+
+        .close-modal-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .close-modal-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .banners-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 25px;
+        }
+
+        /* Loading Spinner for Banners */
+        .banners-loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .banners-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        .no-banners {
+            text-align: center;
+            padding: 40px;
+            color: var(--text2);
         }
 
         /* Form Container */
@@ -458,9 +666,15 @@
             .form-card {
                 padding: 25px;
             }
+            .banners-grid {
+                grid-template-columns: 1fr;
+            }
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
-    
     
     <!-- Chatbot CSS -->
     <style>
@@ -726,9 +940,6 @@
             }
         }
     </style>
-
-
-
 </head>
 <body>
 <div class="toast-container" id="toast-container"></div>
@@ -745,23 +956,55 @@
     </div>
 </div>
 
+<!-- All Banners Modal -->
+<div class="banners-modal" id="banners-modal">
+    <div class="banners-modal-content">
+        <div class="banners-modal-header">
+            <h3><i class="fas fa-images"></i> All Banners</h3>
+            <button class="close-modal-btn" onclick="closeBannersModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="banners-modal-grid" id="all-banners-grid">
+            <!-- Banners will be loaded here -->
+        </div>
+    </div>
+</div>
+
 <nav class="navbar">
     <div class="nav-container">
         <div class="logo">Samriddhi<span>.</span>Pro</div>
         <div class="nav-links">
-            <a href="#">Home</a>
-            <a href="#">Services</a>
-            <a href="#">Contact</a>
+            <a href="#" onclick="scrollToSection('home')">Home</a>
+            <a href="#" onclick="scrollToSection('banners')">Offers</a>
+            <a href="#" onclick="scrollToSection('services')">Services</a>
+            <a href="#" onclick="scrollToSection('contact')">Contact</a>
         </div>
     </div>
 </nav>
 
-<section class="hero">
+<section class="hero" id="home">
     <h1>Get Your <span>Insurance Quote</span> Today</h1>
     <p>Fill out the form below and our experts will contact you with the best insurance plans tailored to your needs.</p>
 </section>
 
-<div class="form-container">
+<!-- Banners Section -->
+<section class="banners-section" id="banners">
+    <div class="section-header">
+        <h2><i class="fas fa-tag"></i> Latest Offers & Updates</h2>
+        <button class="view-all-btn" onclick="showAllBanners()">
+            <i class="fas fa-eye"></i> View All
+        </button>
+    </div>
+    <div class="banners-grid" id="banners-grid">
+        <div class="banners-loading">
+            <div class="spinner"></div>
+            <p>Loading banners...</p>
+        </div>
+    </div>
+</section>
+
+<div class="form-container" id="contact">
     <div class="form-card">
         <h2 class="form-title">Request a Callback</h2>
         <p class="form-subtitle">Fill in your details and we'll get back to you within 24 hours</p>
@@ -865,7 +1108,7 @@
     </div>
 </div>
 
-<div class="features">
+<div class="features" id="services">
     <div class="feature-card">
         <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
         <h3>Best Insurance Plans</h3>
@@ -888,6 +1131,136 @@
 </footer>
 
 <script>
+    // API Base URL
+    const API_BASE_URL = window.location.origin;
+
+    // Load banners on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBanners();
+    });
+
+    // Function to load banners
+    async function loadBanners() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/website/banners`);
+            const data = await response.json();
+            
+            if (data.success && data.data && data.data.length > 0) {
+                displayBanners(data.data.slice(0, 4)); // Show first 4 banners
+                window.allBanners = data.data; // Store all banners for view all
+            } else {
+                displayNoBanners();
+            }
+        } catch (error) {
+            console.error('Error loading banners:', error);
+            displayNoBanners();
+        }
+    }
+
+    // Function to display banners
+    function displayBanners(banners) {
+        const bannersGrid = document.getElementById('banners-grid');
+        
+        if (!banners || banners.length === 0) {
+            displayNoBanners();
+            return;
+        }
+        
+        bannersGrid.innerHTML = banners.map(banner => `
+            <div class="banner-card" onclick="viewBanner(${banner.id})">
+                <img src="${banner.imageUrl}" alt="Banner" class="banner-image" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                <div class="banner-content">
+                    <p class="banner-description">${escapeHtml(banner.description)}</p>
+                    <div class="banner-stats">
+                        <span class="view-count">
+                            <i class="fas fa-eye"></i> ${banner.viewCount || 0} views
+                        </span>
+                        <span><i class="fas fa-calendar"></i> ${new Date(banner.createdAt).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Function to display all banners in modal
+    function showAllBanners() {
+        const modal = document.getElementById('banners-modal');
+        const allBannersGrid = document.getElementById('all-banners-grid');
+        
+        if (!window.allBanners || window.allBanners.length === 0) {
+            allBannersGrid.innerHTML = '<div class="no-banners"><i class="fas fa-image fa-3x"></i><p>No banners available</p></div>';
+        } else {
+            allBannersGrid.innerHTML = window.allBanners.map(banner => `
+                <div class="banner-card" onclick="viewBanner(${banner.id}); closeBannersModal();">
+                    <img src="${banner.imageUrl}" alt="Banner" class="banner-image" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                    <div class="banner-content">
+                        <p class="banner-description">${escapeHtml(banner.description)}</p>
+                        <div class="banner-stats">
+                            <span class="view-count">
+                                <i class="fas fa-eye"></i> ${banner.viewCount || 0} views
+                            </span>
+                            <span><i class="fas fa-calendar"></i> ${new Date(banner.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Function to close banners modal
+    function closeBannersModal() {
+        const modal = document.getElementById('banners-modal');
+        modal.classList.remove('open');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Function to view banner (increment view count)
+    async function viewBanner(bannerId) {
+        try {
+            await fetch(`${API_BASE_URL}/api/website/banners/${bannerId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            // Open banner URL or show details
+            toast('Opening offer details...', 'info');
+        } catch (error) {
+            console.error('Error tracking banner view:', error);
+        }
+    }
+
+    // Function to display no banners message
+    function displayNoBanners() {
+        const bannersGrid = document.getElementById('banners-grid');
+        bannersGrid.innerHTML = `
+            <div class="no-banners" style="grid-column: span 4;">
+                <i class="fas fa-image fa-3x"></i>
+                <p>No banners available. Check back soon for exciting offers!</p>
+            </div>
+        `;
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Scroll to section function
+    function scrollToSection(sectionId) {
+        const element = document.getElementById(sectionId);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
     // Complete Service Category Data with all subcategories and sub-subcategories
     const SERVICE_DATA = {
         LIFE_INSURANCE: {
@@ -1302,9 +1675,14 @@
             closeSuccessModal();
         }
     });
+
+    // Close banners modal on overlay click
+    document.getElementById('banners-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeBannersModal();
+        }
+    });
 </script>
-
-
 
 <!-- Chatbot JavaScript -->
 <script>
