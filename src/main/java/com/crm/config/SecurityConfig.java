@@ -1,4 +1,3 @@
-// SecurityConfig.java - Updated with chatbot endpoints
 package com.crm.config;
 
 import com.crm.security.JwtAuthenticationEntryPoint;
@@ -43,13 +42,17 @@ public class SecurityConfig {
                                 "/api/auth/logout",
                                 "/api/auth/validate",
                                 "/api/website/**",   // Public website endpoints
-                                "/api/chatbot/**"    // ADD THIS - Public chatbot endpoints
+                                "/api/chatbot/**",   // Public chatbot endpoints
+                                "/api/images/**",    // ADD THIS - Public image endpoints
+                                "/api/website/banners/**"
                         ).permitAll()
 
                         // Static resources
                         .requestMatchers(
                                 "/",
                                 "/login",
+                                "/admin",
+                                "/employee",
                                 "/login.html",
                                 "/admin.html",
                                 "/employee.html",

@@ -181,29 +181,17 @@
             padding: 20px;
         }
 
+        .banner-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+
         .banner-description {
             color: var(--text2);
             font-size: 14px;
             line-height: 1.5;
-            margin-bottom: 15px;
-        }
-
-        .banner-stats {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            color: var(--text2);
-        }
-
-        .view-count {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .view-count i {
-            font-size: 12px;
         }
 
         .badge {
@@ -216,6 +204,84 @@
             border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
+        }
+
+        /* Video Resources Section */
+        .videos-section {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .video-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.15);
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-content {
+            padding: 20px;
+        }
+
+        .video-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-title i {
+            color: var(--danger);
+            font-size: 20px;
+        }
+
+        .video-description {
+            color: var(--text2);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .video-duration {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--surface2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--text2);
+            margin-top: 12px;
         }
 
         /* All Banners Modal */
@@ -669,6 +735,9 @@
             .banners-grid {
                 grid-template-columns: 1fr;
             }
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
             .section-header {
                 flex-direction: column;
                 text-align: center;
@@ -960,7 +1029,7 @@
 <div class="banners-modal" id="banners-modal">
     <div class="banners-modal-content">
         <div class="banners-modal-header">
-            <h3><i class="fas fa-images"></i> All Banners</h3>
+            <h3><i class="fas fa-images"></i> All Banners & Offers</h3>
             <button class="close-modal-btn" onclick="closeBannersModal()">
                 <i class="fas fa-times"></i>
             </button>
@@ -977,6 +1046,7 @@
         <div class="nav-links">
             <a href="#" onclick="scrollToSection('home')">Home</a>
             <a href="#" onclick="scrollToSection('banners')">Offers</a>
+            <a href="#" onclick="scrollToSection('videos')">Videos</a>
             <a href="#" onclick="scrollToSection('services')">Services</a>
             <a href="#" onclick="scrollToSection('contact')">Contact</a>
         </div>
@@ -1000,6 +1070,84 @@
         <div class="banners-loading">
             <div class="spinner"></div>
             <p>Loading banners...</p>
+        </div>
+    </div>
+</section>
+
+<!-- Video Resources Section -->
+<section class="videos-section" id="videos">
+    <div class="section-header">
+        <h2><i class="fas fa-video"></i> Educational Videos</h2>
+        <p style="color: var(--text2);">Learn about insurance and financial planning</p>
+    </div>
+    <div class="videos-grid">
+        <div class="video-card">
+            <div class="video-wrapper">
+                <iframe
+                        src="https://www.youtube.com/embed/-YlmnPh-6rE?si=O54-72XGKLOhkGKX"
+                        title="Understanding Life Insurance"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+            </div>
+            <div class="video-content">
+                <div class="video-title">
+                    <i class="fab fa-youtube"></i>
+                    Understanding Life Insurance
+                </div>
+                <p class="video-description">
+                    Learn the basics of life insurance, types of policies, and how to choose the right coverage for your family's future.
+                </p>
+                <div class="video-duration">
+                    <i class="fas fa-clock"></i> Duration: 5:32 mins
+                </div>
+            </div>
+        </div>
+        
+        <div class="video-card">
+            <div class="video-wrapper">
+                <iframe
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                        title="Health Insurance Guide"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+            </div>
+            <div class="video-content">
+                <div class="video-title">
+                    <i class="fab fa-youtube"></i>
+                    Complete Health Insurance Guide
+                </div>
+                <p class="video-description">
+                    Everything you need to know about health insurance - from coverage options to claim process and network hospitals.
+                </p>
+                <div class="video-duration">
+                    <i class="fas fa-clock"></i> Duration: 8:15 mins
+                </div>
+            </div>
+        </div>
+        
+        <div class="video-card">
+            <div class="video-wrapper">
+                <iframe
+                        src="https://www.youtube.com/embed/gb0w_5rDvB4"
+                        title="Investment Planning"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+            </div>
+            <div class="video-content">
+                <div class="video-title">
+                    <i class="fab fa-youtube"></i>
+                    Smart Investment Planning
+                </div>
+                <p class="video-description">
+                    Discover investment options for wealth creation, retirement planning, and tax saving strategies.
+                </p>
+                <div class="video-duration">
+                    <i class="fas fa-clock"></i> Duration: 6:45 mins
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -1078,6 +1226,29 @@
     </div>
 </div>
 
+<!-- Features Section -->
+<div class="features" id="services">
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Best Insurance Plans</h3>
+        <p>Compare plans from top insurance providers</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-clock"></i></div>
+        <h3>Quick Response</h3>
+        <p>Get callback within 24 hours</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-hand-holding-usd"></i></div>
+        <h3>Best Price Guarantee</h3>
+        <p>We ensure you get the best rates</p>
+    </div>
+</div>
+
+<footer class="footer">
+    <p>&copy; 2024 Samriddhi Financial Services. All rights reserved.</p>
+</footer>
+
 <!-- Chatbot HTML -->
 <div class="chatbot-container">
     <div class="chatbot-toggle" id="chatbot-toggle">
@@ -1108,28 +1279,6 @@
     </div>
 </div>
 
-<div class="features" id="services">
-    <div class="feature-card">
-        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-        <h3>Best Insurance Plans</h3>
-        <p>Compare plans from top insurance providers</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-icon"><i class="fas fa-clock"></i></div>
-        <h3>Quick Response</h3>
-        <p>Get callback within 24 hours</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-icon"><i class="fas fa-hand-holding-usd"></i></div>
-        <h3>Best Price Guarantee</h3>
-        <p>We ensure you get the best rates</p>
-    </div>
-</div>
-
-<footer class="footer">
-    <p>&copy; 2024 Samriddhi Financial Services. All rights reserved.</p>
-</footer>
-
 <script>
     // API Base URL
     const API_BASE_URL = window.location.origin;
@@ -1139,15 +1288,17 @@
         loadBanners();
     });
 
-    // Function to load banners
+    // Function to load banners from API
     async function loadBanners() {
         try {
             const response = await fetch(`${API_BASE_URL}/api/website/banners`);
             const data = await response.json();
             
             if (data.success && data.data && data.data.length > 0) {
-                displayBanners(data.data.slice(0, 4)); // Show first 4 banners
-                window.allBanners = data.data; // Store all banners for view all
+                // Store all banners for view all
+                window.allBanners = data.data;
+                // Display only latest 4 banners
+                displayBanners(data.data.slice(0, 4));
             } else {
                 displayNoBanners();
             }
@@ -1167,17 +1318,12 @@
         }
         
         bannersGrid.innerHTML = banners.map(banner => `
-            <div class="banner-card" onclick="viewBanner(${banner.id})">
-                <img src="${banner.imageUrl}" alt="Banner" class="banner-image" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+            <div class="banner-card">
+                <img src="${banner.imageUrl}" alt="${escapeHtml(banner.title)}" class="banner-image" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
                 <div class="banner-content">
-                    <p class="banner-description">${escapeHtml(banner.description)}</p>
-                    <div class="banner-stats">
-                        <span class="view-count">
-                            <i class="fas fa-eye"></i> ${banner.viewCount || 0} views
-                        </span>
-                        <span><i class="fas fa-calendar"></i> ${new Date(banner.createdAt).toLocaleDateString()}</span>
-                    </div>
+                    <div class="banner-title">${escapeHtml(banner.title)}</div>
                 </div>
+                <div class="badge">Offer</div>
             </div>
         `).join('');
     }
@@ -1191,17 +1337,12 @@
             allBannersGrid.innerHTML = '<div class="no-banners"><i class="fas fa-image fa-3x"></i><p>No banners available</p></div>';
         } else {
             allBannersGrid.innerHTML = window.allBanners.map(banner => `
-                <div class="banner-card" onclick="viewBanner(${banner.id}); closeBannersModal();">
-                    <img src="${banner.imageUrl}" alt="Banner" class="banner-image" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                <div class="banner-card">
+                    <img src="${banner.imageUrl}" alt="${escapeHtml(banner.title)}" class="banner-image" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
                     <div class="banner-content">
-                        <p class="banner-description">${escapeHtml(banner.description)}</p>
-                        <div class="banner-stats">
-                            <span class="view-count">
-                                <i class="fas fa-eye"></i> ${banner.viewCount || 0} views
-                            </span>
-                            <span><i class="fas fa-calendar"></i> ${new Date(banner.createdAt).toLocaleDateString()}</span>
-                        </div>
+                        <div class="banner-title">${escapeHtml(banner.title)}</div>
                     </div>
+                    <div class="badge">Offer</div>
                 </div>
             `).join('');
         }
@@ -1215,23 +1356,6 @@
         const modal = document.getElementById('banners-modal');
         modal.classList.remove('open');
         document.body.style.overflow = 'auto';
-    }
-
-    // Function to view banner (increment view count)
-    async function viewBanner(bannerId) {
-        try {
-            await fetch(`${API_BASE_URL}/api/website/banners/${bannerId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            // Open banner URL or show details
-            toast('Opening offer details...', 'info');
-        } catch (error) {
-            console.error('Error tracking banner view:', error);
-        }
     }
 
     // Function to display no banners message
@@ -1261,187 +1385,55 @@
         }
     }
 
-    // Complete Service Category Data with all subcategories and sub-subcategories
+    // Complete Service Category Data
     const SERVICE_DATA = {
         LIFE_INSURANCE: {
             display: "Life Insurance",
             subcategories: {
-                TERM_LIFE: {
-                    display: "Term Life Insurance",
-                    subsub: {
-                        LEVEL_TERM: "Level Term Plan",
-                        DECREASING_TERM: "Decreasing Term Plan",
-                        INCREASING_TERM: "Increasing Term Plan"
-                    }
-                },
-                WHOLE_LIFE: {
-                    display: "Whole Life Insurance",
-                    subsub: {
-                        TRADITIONAL_WHOLE: "Traditional Whole Life",
-                        PARTICIPATING_WHOLE: "Participating Whole Life",
-                        LIMITED_PAY_WHOLE: "Limited Pay Whole Life"
-                    }
-                },
-                UNIVERSAL_LIFE: {
-                    display: "Universal Life Insurance",
-                    subsub: {
-                        FLEXIBLE_PREMIUM: "Flexible Premium UL",
-                        INDEXED_UL: "Indexed Universal Life"
-                    }
-                },
-                ENDOWMENT_PLANS: {
-                    display: "Endowment Plans",
-                    subsub: {
-                        WITH_PROFITS: "With Profits Endowment",
-                        WITHOUT_PROFITS: "Without Profits Endowment",
-                        MONEY_BACK: "Money Back Plan"
-                    }
-                }
+                TERM_LIFE: { display: "Term Life Insurance", subsub: { LEVEL_TERM: "Level Term Plan", DECREASING_TERM: "Decreasing Term Plan", INCREASING_TERM: "Increasing Term Plan" } },
+                WHOLE_LIFE: { display: "Whole Life Insurance", subsub: { TRADITIONAL_WHOLE: "Traditional Whole Life", PARTICIPATING_WHOLE: "Participating Whole Life", LIMITED_PAY_WHOLE: "Limited Pay Whole Life" } },
+                UNIVERSAL_LIFE: { display: "Universal Life Insurance", subsub: { FLEXIBLE_PREMIUM: "Flexible Premium UL", INDEXED_UL: "Indexed Universal Life" } },
+                ENDOWMENT_PLANS: { display: "Endowment Plans", subsub: { WITH_PROFITS: "With Profits Endowment", WITHOUT_PROFITS: "Without Profits Endowment", MONEY_BACK: "Money Back Plan" } }
             }
         },
         HEALTH_INSURANCE: {
             display: "Health Insurance",
             subcategories: {
-                INDIVIDUAL_HEALTH: {
-                    display: "Individual Health Insurance",
-                    subsub: {
-                        STANDARD_INDIVIDUAL: "Standard Individual Cover",
-                        PERSONAL_ACCIDENT: "Personal Accident Cover"
-                    }
-                },
-                FAMILY_FLOATER: {
-                    display: "Family Floater Insurance",
-                    subsub: {
-                        FAMILY_COVER: "Family Coverage",
-                        TOP_UP_PLANS: "Top-up Plans",
-                        SUPER_TOP_UP: "Super Top-up Plans"
-                    }
-                },
-                CRITICAL_ILLNESS: {
-                    display: "Critical Illness Insurance",
-                    subsub: {
-                        CANCER_COVER: "Cancer Cover",
-                        HEART_COVER: "Heart Disease Cover",
-                        MULTI_ILLNESS: "Multi-Critical Illness Cover"
-                    }
-                },
-                SENIOR_CITIZEN: {
-                    display: "Senior Citizen Health Insurance",
-                    subsub: {
-                        SENIOR_INDIVIDUAL: "Individual Senior Cover",
-                        SENIOR_COUPLE: "Couple Senior Cover"
-                    }
-                }
+                INDIVIDUAL_HEALTH: { display: "Individual Health Insurance", subsub: { STANDARD_INDIVIDUAL: "Standard Individual Cover", PERSONAL_ACCIDENT: "Personal Accident Cover" } },
+                FAMILY_FLOATER: { display: "Family Floater Insurance", subsub: { FAMILY_COVER: "Family Coverage", TOP_UP_PLANS: "Top-up Plans", SUPER_TOP_UP: "Super Top-up Plans" } },
+                CRITICAL_ILLNESS: { display: "Critical Illness Insurance", subsub: { CANCER_COVER: "Cancer Cover", HEART_COVER: "Heart Disease Cover", MULTI_ILLNESS: "Multi-Critical Illness Cover" } },
+                SENIOR_CITIZEN: { display: "Senior Citizen Health Insurance", subsub: { SENIOR_INDIVIDUAL: "Individual Senior Cover", SENIOR_COUPLE: "Couple Senior Cover" } }
             }
         },
         GENERAL_INSURANCE: {
             display: "General Insurance",
             subcategories: {
-                MOTOR_INSURANCE: {
-                    display: "Motor Insurance",
-                    subsub: {
-                        COMPREHENSIVE_CAR: "Comprehensive Car Insurance",
-                        THIRD_PARTY_CAR: "Third Party Car Insurance",
-                        TWO_WHEELER: "Two Wheeler Insurance",
-                        COMMERCIAL_VEHICLE: "Commercial Vehicle Insurance"
-                    }
-                },
-                HOME_INSURANCE: {
-                    display: "Home Insurance",
-                    subsub: {
-                        STRUCTURE_COVER: "Building/Structure Cover",
-                        CONTENT_COVER: "Home Content Cover",
-                        RENTERS_INSURANCE: "Renters Insurance"
-                    }
-                },
-                TRAVEL_INSURANCE: {
-                    display: "Travel Insurance",
-                    subsub: {
-                        DOMESTIC_TRAVEL: "Domestic Travel Insurance",
-                        INTERNATIONAL_TRAVEL: "International Travel Insurance",
-                        STUDENT_TRAVEL: "Student Travel Insurance"
-                    }
-                }
+                MOTOR_INSURANCE: { display: "Motor Insurance", subsub: { COMPREHENSIVE_CAR: "Comprehensive Car Insurance", THIRD_PARTY_CAR: "Third Party Car Insurance", TWO_WHEELER: "Two Wheeler Insurance", COMMERCIAL_VEHICLE: "Commercial Vehicle Insurance" } },
+                HOME_INSURANCE: { display: "Home Insurance", subsub: { STRUCTURE_COVER: "Building/Structure Cover", CONTENT_COVER: "Home Content Cover", RENTERS_INSURANCE: "Renters Insurance" } },
+                TRAVEL_INSURANCE: { display: "Travel Insurance", subsub: { DOMESTIC_TRAVEL: "Domestic Travel Insurance", INTERNATIONAL_TRAVEL: "International Travel Insurance", STUDENT_TRAVEL: "Student Travel Insurance" } }
             }
         },
         INVESTMENT: {
             display: "Investment",
             subcategories: {
-                MUTUAL_FUNDS: {
-                    display: "Mutual Funds",
-                    subsub: {
-                        EQUITY_FUNDS: "Equity Funds",
-                        DEBT_FUNDS: "Debt Funds",
-                        HYBRID_FUNDS: "Hybrid Funds",
-                        TAX_SAVING_FUNDS: "Tax Saving Funds (ELSS)"
-                    }
-                },
-                ULIP: {
-                    display: "ULIP Plans",
-                    subsub: {
-                        EQUITY_ULIP: "Equity-oriented ULIP",
-                        DEBT_ULIP: "Debt-oriented ULIP",
-                        BALANCED_ULIP: "Balanced ULIP"
-                    }
-                },
-                FIXED_DEPOSITS: {
-                    display: "Fixed Deposits",
-                    subsub: {
-                        CORPORATE_FD: "Corporate FD",
-                        BANK_FD: "Bank Fixed Deposit",
-                        TAX_SAVER_FD: "Tax Saver FD"
-                    }
-                }
+                MUTUAL_FUNDS: { display: "Mutual Funds", subsub: { EQUITY_FUNDS: "Equity Funds", DEBT_FUNDS: "Debt Funds", HYBRID_FUNDS: "Hybrid Funds", TAX_SAVING_FUNDS: "Tax Saving Funds (ELSS)" } },
+                ULIP: { display: "ULIP Plans", subsub: { EQUITY_ULIP: "Equity-oriented ULIP", DEBT_ULIP: "Debt-oriented ULIP", BALANCED_ULIP: "Balanced ULIP" } },
+                FIXED_DEPOSITS: { display: "Fixed Deposits", subsub: { CORPORATE_FD: "Corporate FD", BANK_FD: "Bank Fixed Deposit", TAX_SAVER_FD: "Tax Saver FD" } }
             }
         },
         RETIREMENT_PLANNING: {
             display: "Retirement Planning",
             subcategories: {
-                PENSION_PLANS: {
-                    display: "Pension Plans",
-                    subsub: {
-                        IMMEDIATE_ANNUITY: "Immediate Annuity Plans",
-                        DEFERRED_ANNUITY: "Deferred Annuity Plans",
-                        NATIONAL_PENSION: "National Pension System"
-                    }
-                },
-                ANNUITY_PLANS: {
-                    display: "Annuity Plans",
-                    subsub: {
-                        LIFE_ANNUITY: "Life Annuity",
-                        JOINT_LIFE: "Joint Life Annuity",
-                        RETURN_OF_PURCHASE: "Return of Purchase Price"
-                    }
-                }
+                PENSION_PLANS: { display: "Pension Plans", subsub: { IMMEDIATE_ANNUITY: "Immediate Annuity Plans", DEFERRED_ANNUITY: "Deferred Annuity Plans", NATIONAL_PENSION: "National Pension System" } },
+                ANNUITY_PLANS: { display: "Annuity Plans", subsub: { LIFE_ANNUITY: "Life Annuity", JOINT_LIFE: "Joint Life Annuity", RETURN_OF_PURCHASE: "Return of Purchase Price" } }
             }
         },
         BUSINESS_INSURANCE: {
             display: "Business Insurance",
             subcategories: {
-                CORPORATE_HEALTH: {
-                    display: "Corporate Health Insurance",
-                    subsub: {
-                        STANDARD_CORPORATE: "Standard Corporate Plan",
-                        CUSTOM_CORPORATE: "Customized Corporate Plan",
-                        GROUP_CRITICAL: "Group Critical Illness"
-                    }
-                },
-                LIABILITY_INSURANCE: {
-                    display: "Liability Insurance",
-                    subsub: {
-                        PUBLIC_LIABILITY: "Public Liability Insurance",
-                        PRODUCT_LIABILITY: "Product Liability Insurance",
-                        PROFESSIONAL_INDEMNITY: "Professional Indemnity"
-                    }
-                },
-                PROPERTY_INSURANCE: {
-                    display: "Property Insurance",
-                    subsub: {
-                        FIRE_INSURANCE: "Fire Insurance",
-                        BURGLARY_INSURANCE: "Burglary Insurance",
-                        MACHINERY_BREAKDOWN: "Machinery Breakdown Insurance"
-                    }
-                }
+                CORPORATE_HEALTH: { display: "Corporate Health Insurance", subsub: { STANDARD_CORPORATE: "Standard Corporate Plan", CUSTOM_CORPORATE: "Customized Corporate Plan", GROUP_CRITICAL: "Group Critical Illness" } },
+                LIABILITY_INSURANCE: { display: "Liability Insurance", subsub: { PUBLIC_LIABILITY: "Public Liability Insurance", PRODUCT_LIABILITY: "Product Liability Insurance", PROFESSIONAL_INDEMNITY: "Professional Indemnity" } },
+                PROPERTY_INSURANCE: { display: "Property Insurance", subsub: { FIRE_INSURANCE: "Fire Insurance", BURGLARY_INSURANCE: "Burglary Insurance", MACHINERY_BREAKDOWN: "Machinery Breakdown Insurance" } }
             }
         }
     };
@@ -1560,7 +1552,6 @@
     async function handleSubmit(e) {
         e.preventDefault();
         
-        // Validate inputs
         const name = document.getElementById('customer-name').value.trim();
         const email = document.getElementById('customer-email').value.trim();
         const phone = document.getElementById('customer-phone').value.trim();
@@ -1596,7 +1587,6 @@
         submitBtn.innerHTML = '<span class="loading"></span> Submitting...';
         submitBtn.disabled = true;
         
-        // Build the lead data according to backend API
         const subcategory = document.getElementById('subcategory').value || null;
         const subsubcategory = document.getElementById('subsubcategory').value || null;
         const message = document.getElementById('message').value;
@@ -1639,7 +1629,6 @@
                 throw new Error(data.message || data.error || 'Submission failed');
             }
             
-            // Show success modal instead of toast
             document.getElementById('success-modal').classList.add('open');
             
         } catch (err) {
@@ -1651,12 +1640,11 @@
         }
     }
 
-    // Add input validation for phone number
+    // Input validation
     document.getElementById('customer-phone').addEventListener('input', function(e) {
         this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
     });
 
-    // Add email validation on blur
     document.getElementById('customer-email').addEventListener('blur', function(e) {
         const email = this.value.trim();
         if (email && !validateEmail(email)) {
@@ -1676,7 +1664,6 @@
         }
     });
 
-    // Close banners modal on overlay click
     document.getElementById('banners-modal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeBannersModal();
@@ -1686,20 +1673,14 @@
 
 <!-- Chatbot JavaScript -->
 <script>
-    // Chatbot functionality
     let sessionId = localStorage.getItem('chatbot_session_id');
     if (!sessionId) {
-        sessionId = generateSessionId();
+        sessionId = 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('chatbot_session_id', sessionId);
     }
 
     let isWaitingForResponse = false;
 
-    function generateSessionId() {
-        return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-
-    // DOM elements
     const chatbotToggle = document.getElementById('chatbot-toggle');
     const chatbotWindow = document.getElementById('chatbot-window');
     const chatbotClose = document.getElementById('chatbot-close');
@@ -1707,12 +1688,11 @@
     const chatbotInput = document.getElementById('chatbot-input');
     const chatbotSend = document.getElementById('chatbot-send');
 
-    // Toggle chatbot
     chatbotToggle.addEventListener('click', () => {
         chatbotWindow.classList.toggle('open');
         if (chatbotWindow.classList.contains('open')) {
             chatbotInput.focus();
-            scrollToBottom();
+            scrollToBottomChat();
         }
     });
 
@@ -1720,11 +1700,9 @@
         chatbotWindow.classList.remove('open');
     });
 
-    // Send message function
     async function sendMessage(message) {
         if (!message.trim() || isWaitingForResponse) return;
 
-        // Add user message to chat
         addMessage(message, 'user');
         chatbotInput.value = '';
         isWaitingForResponse = true;
@@ -1733,13 +1711,8 @@
         try {
             const response = await fetch('/api/chatbot/message', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: message,
-                    sessionId: sessionId
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message, sessionId: sessionId })
             });
 
             const data = await response.json();
@@ -1750,26 +1723,18 @@
                 addMessage(botResponse.response, 'bot');
 
                 if (botResponse.isComplete) {
-                    // Show success notification
                     toast('✅ ' + botResponse.response.split('\n')[0], 'success');
-                    
-                    // Reset session for new conversation after 30 seconds
                     setTimeout(() => {
-                        sessionId = generateSessionId();
+                        sessionId = 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                         localStorage.setItem('chatbot_session_id', sessionId);
                         addMessage('👋 Hi there! Welcome back! I can help you get a quote. What\'s your name?', 'bot');
                     }, 30000);
                 }
 
-                // Add quick replies for service selection
                 if (botResponse.messageType === 'ASKING_SERVICE') {
                     addQuickReplies([
-                        'Health Insurance',
-                        'Life Insurance',
-                        'General Insurance',
-                        'Investment',
-                        'Retirement Planning',
-                        'Business Insurance'
+                        'Health Insurance', 'Life Insurance', 'General Insurance',
+                        'Investment', 'Retirement Planning', 'Business Insurance'
                     ]);
                 }
             } else {
@@ -1781,7 +1746,7 @@
             addMessage('❌ Network error. Please check your connection and try again.', 'bot');
         } finally {
             isWaitingForResponse = false;
-            scrollToBottom();
+            scrollToBottomChat();
         }
     }
 
@@ -1799,9 +1764,8 @@
         
         messageDiv.appendChild(contentDiv);
         messageDiv.appendChild(timeDiv);
-        
         chatbotMessages.appendChild(messageDiv);
-        scrollToBottom();
+        scrollToBottomChat();
     }
 
     function addQuickReplies(replies) {
@@ -1820,7 +1784,7 @@
         });
         
         chatbotMessages.appendChild(quickRepliesDiv);
-        scrollToBottom();
+        scrollToBottomChat();
     }
 
     let typingIndicator = null;
@@ -1828,15 +1792,9 @@
     function showTypingIndicator() {
         typingIndicator = document.createElement('div');
         typingIndicator.className = 'message bot';
-        typingIndicator.innerHTML = `
-            <div class="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        `;
+        typingIndicator.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
         chatbotMessages.appendChild(typingIndicator);
-        scrollToBottom();
+        scrollToBottomChat();
     }
 
     function removeTypingIndicator() {
@@ -1846,53 +1804,38 @@
         }
     }
 
-    function scrollToBottom() {
+    function scrollToBottomChat() {
         chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
     }
 
-    // Event listeners
-    chatbotSend.addEventListener('click', () => {
-        sendMessage(chatbotInput.value);
-    });
-
+    chatbotSend.addEventListener('click', () => sendMessage(chatbotInput.value));
     chatbotInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendMessage(chatbotInput.value);
-        }
+        if (e.key === 'Enter') sendMessage(chatbotInput.value);
     });
 
-    // Check for existing incomplete conversation
-    async function checkExistingConversation() {
+    setTimeout(async () => {
         try {
             const response = await fetch(`/api/chatbot/history?sessionId=${sessionId}`);
             const data = await response.json();
-            
             if (data.success && data.data && !data.data.isComplete && data.data.collectedName) {
-                // Resume conversation
                 let resumeMessage = 'Welcome back! ';
                 if (data.data.collectedName && !data.data.collectedEmail) {
                     resumeMessage += `I see you shared your name as ${data.data.collectedName}. Could you please share your email address?`;
                 } else if (data.data.collectedEmail && !data.data.collectedPhone) {
                     resumeMessage += `Could you please share your 10-digit mobile number?`;
                 } else if (data.data.collectedPhone && !data.data.collectedService) {
-                    resumeMessage += `What service are you interested in? (Health Insurance, Life Insurance, etc.)`;
+                    resumeMessage += `What service are you interested in?`;
                 } else if (data.data.collectedService && !data.data.leadCreated) {
                     resumeMessage += `Do you have any specific requirements? Type 'skip' if not.`;
                 }
-                
                 if (resumeMessage !== 'Welcome back! ') {
-                    setTimeout(() => {
-                        addMessage(resumeMessage, 'bot');
-                    }, 1000);
+                    setTimeout(() => addMessage(resumeMessage, 'bot'), 1000);
                 }
             }
         } catch (error) {
             console.error('Error checking conversation:', error);
         }
-    }
-
-    // Check for existing conversation on load
-    setTimeout(checkExistingConversation, 500);
+    }, 500);
 </script>
 </body>
 </html>

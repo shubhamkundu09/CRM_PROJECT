@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samriddhi Financial Services - Employee Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0e1a; --surface: #111827; --surface2: #1a2332; --surface3: #1f2a3c;
+            --border: #1f2a3c; --border2: #2d3a4e; --accent: #3b82f6; --accent2: #8b5cf6;
+            --accent3: #10b981; --accent4: #f59e0b; --accent5: #ef4444;
+            --text: #f1f5f9; --text2: #94a3b8; --text3: #64748b;
+            --hot: #ef4444; --warm: #f59e0b; --cold: #60a5fa;
+            --interested: #10b981; --not-interested: #ef4444; --normal: #8b5cf6;
+            --sidebar-w: 280px; --radius: 16px; --radius-sm: 10px; --radius-xs: 6px;
+            --shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --glow: 0 0 30px rgba(59,130,246,0.2);
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--surface2); }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        
+        /* Login Page */
+        #login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%); position: relative; overflow: hidden; }
+        .login-grid { display: grid; grid-template-columns: 1fr 480px; min-height: 100vh; width: 100%; max-width: 1400px; margin: 0 auto; }
+        .login-left { display: flex; align-items: center; justify-content: center; padding: 60px; background: radial-gradient(circle at 0% 0%, rgba(59,130,246,0.08) 0%, transparent 70%); border-right: 1px solid var(--border); }
+        .login-right { display: flex; align-items: center; justify-content: center; padding: 60px 48px; background: var(--surface); }
+        .login-box { width: 100%; max-width: 400px; }
+        
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s ease; white-space: nowrap; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { background: var(--surface2); border-color: var(--accent); }
+        .btn-danger { background: rgba(239,68,68,0.15); color: var(--hot); border: 1px solid rgba(239,68,68,0.3); }
+        .btn-danger:hover { background: rgba(239,68,68,0.25); }
+        .btn-success { background: rgba(16,185,129,0.15); color: var(--accent3); border: 1px solid rgba(16,185,129,0.3); }
+        .btn-warning { background: rgba(245,158,11,0.15); color: var(--warm); border: 1px solid rgba(245,158,11,0.3); }
+        .btn-purple { background: rgba(139,92,246,0.15); color: var(--accent2); border: 1px solid rgba(139,92,246,0.3); }
+        .btn-sm { padding: 7px 14px; font-size: 12px; }
+        .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: var(--radius-xs); }
+        
+        /* Form Elements */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-control { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 11px 15px; font-size: 14px; outline: none; transition: all 0.2s; font-family: inherit; }
+        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        textarea.form-control { resize: vertical; min-height: 80px; }
+        
+        /* Cards */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: all 0.2s; }
+        .card-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .card-body { padding: 22px; }
+        
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; position: relative; overflow: hidden; transition: all 0.2s; }
+        .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 6px; background: linear-gradient(135deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Leads Grid */
+        .leads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px; }
+        .lead-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.2s; }
+        .lead-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--glow); }
+        .lead-card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .lead-card-name { font-weight: 700; font-size: 16px; }
+        .lead-card-detail { font-size: 12px; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .lead-card-stats { display: flex; margin: 14px 0; background: var(--surface3); border-radius: var(--radius-sm); overflow: hidden; }
+        .lead-card-stat { flex: 1; padding: 10px 0; text-align: center; border-right: 1px solid var(--border); }
+        .lead-card-stat:last-child { border-right: none; }
+        .lead-card-stat .number { font-weight: 700; font-size: 18px; color: var(--accent3); }
+        .lead-card-stat .label { font-size: 10px; color: var(--text2); margin-top: 3px; }
+        .lead-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 11px; color: var(--text2); }
+        .lead-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+        
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-hot { background: rgba(239,68,68,0.15); color: var(--hot); }
+        .badge-warm { background: rgba(245,158,11,0.15); color: var(--warm); }
+        .badge-cold { background: rgba(96,165,250,0.15); color: var(--cold); }
+        .badge-interested { background: rgba(16,185,129,0.15); color: var(--interested); }
+        .badge-not-interested { background: rgba(239,68,68,0.15); color: var(--not-interested); }
+        .badge-normal { background: rgba(139,92,246,0.15); color: var(--normal); }
+        .badge-active { background: rgba(16,185,129,0.15); color: var(--accent3); }
+        .badge-inactive { background: rgba(100,116,139,0.15); color: var(--text3); }
+        .badge-website { background: rgba(59,130,246,0.15); color: var(--accent); }
+        .badge-update { background: rgba(59,130,246,0.2); color: var(--accent); }
+        .badge-stage { background: rgba(139,92,246,0.2); color: var(--accent2); }
+        .badge-contact { background: rgba(245,158,11,0.2); color: var(--warm); }
+        
+        /* Sidebar */
+        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; z-index: 100; }
+        .sidebar-logo { padding: 24px 22px 20px; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; border-bottom: 1px solid var(--border); }
+        .sidebar-logo span { color: var(--accent); }
+        .sidebar-user { padding: 16px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+        .user-avatar { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+        .user-name { font-weight: 600; font-size: 14px; }
+        .user-role { font-size: 11px; color: var(--text2); margin-top: 2px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 18px; color: var(--text2); cursor: pointer; font-size: 13px; font-weight: 500; margin: 3px 10px; border-radius: var(--radius-sm); transition: all 0.2s; }
+        .nav-item:hover { color: var(--text); background: var(--surface2); }
+        .nav-item.active { color: var(--accent); background: linear-gradient(90deg, rgba(59,130,246,0.12) 0%, transparent 100%); font-weight: 600; }
+        .nav-item i { width: 20px; }
+        
+        /* Main Content */
+        .main-content { margin-left: var(--sidebar-w); padding: 28px 36px; min-height: 100vh; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+        .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+        .page-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+        
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; padding: 20px; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; transform: scale(0.96); transition: transform 0.25s ease; }
+        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-lg { max-width: 800px; }
+        .modal-xl { max-width: 1000px; }
+        .modal-header { padding: 24px 28px 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; padding: 8px; border-radius: 8px; transition: all 0.2s; }
+        .modal-close:hover { background: var(--surface2); color: var(--text); }
+        .modal-body { padding: 24px 28px; }
+        .modal-footer { padding: 0 28px 24px; display: flex; gap: 12px; justify-content: flex-end; }
+        
+        /* Info Grid */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .info-item { padding: 12px; background: var(--surface2); border-radius: var(--radius-sm); }
+        .info-label { font-size: 11px; color: var(--text2); text-transform: uppercase; margin-bottom: 6px; }
+        .info-value { font-weight: 600; font-size: 14px; }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+        .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-panel { display: block; }
+        .checkbox-grid { display: flex; gap: 16px; flex-wrap: wrap; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+        
+        /* Sections */
+        .section { display: none; animation: fadeIn 0.3s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+        .loading-state { display: flex; align-items: center; justify-content: center; padding: 60px; gap: 12px; color: var(--text2); }
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 12px; animation: slideInRight 0.3s ease; font-size: 13px; min-width: 280px; box-shadow: var(--shadow-sm); }
+        .toast.success { border-left: 3px solid var(--accent3); }
+        .toast.error { border-left: 3px solid var(--hot); }
+        .toast.warning { border-left: 3px solid var(--warm); }
+        .toast.info { border-left: 3px solid var(--accent); }
+        @keyframes slideInRight { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        .pass-strength { height: 3px; border-radius: 3px; background: var(--border); overflow: hidden; margin-top: 8px; }
+        .pass-strength-bar { height: 100%; width: 0; transition: width 0.3s; background: linear-gradient(90deg, var(--hot), var(--warm), var(--accent3)); }
+        
+        @media (max-width: 1024px) { .sidebar { transform: translateX(-100%); transition: transform 0.3s; } .main-content { margin-left: 0; padding: 20px; } }
+        @media (max-width: 768px) { .login-grid { grid-template-columns: 1fr; } .login-left { display: none; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .leads-grid { grid-template-columns: 1fr; } .info-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="toast-container" id="toast-container"></div>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+    <div class="login-grid">
+        <div class="login-left">
+            <div>
+                <div class="sidebar-logo" style="padding:0 0 24px 0; font-size: 28px;">Samriddhi<span>.</span>Pro</div>
+                <div class="page-title" style="font-size: 48px; margin-bottom: 20px;">Employee Portal<br><em style="color: var(--accent);">Manage your leads</em></div>
+                <div class="page-sub" style="font-size: 15px;">Track your assigned leads, update progress, and manage follow-ups.</div>
+                <div style="margin-top: 40px; display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div><i class="fas fa-chart-line" style="color: var(--accent3);"></i> Track Performance</div>
+                    <div><i class="fas fa-calendar" style="color: var(--accent4);"></i> Manage Follow-ups</div>
+                    <div><i class="fas fa-phone-alt" style="color: var(--accent);"></i> Update Activities</div>
+                </div>
+            </div>
+        </div>
+        <div class="login-right">
+            <div class="login-box">
+                <div class="page-title" style="font-size: 32px; margin-bottom: 8px;">Employee Login</div>
+                <div class="page-sub" style="margin-bottom: 36px;">Sign in to access your dashboard</div>
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="login-email" placeholder="employee@samriddhi.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="login-password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="login-btn" style="width: 100%;">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                </form>
+                <div class="page-sub" style="text-align: center; margin-top: 24px; font-size: 11px;">
+                    Contact your administrator for credentials
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display: none;">
+    <aside class="sidebar">
+        <div class="sidebar-logo">Samriddhi<span>.</span>Pro</div>
+        <div class="sidebar-user">
+            <div class="user-avatar" id="nav-avatar">E</div>
+            <div style="min-width: 0;">
+                <div class="user-name" id="nav-username">Employee</div>
+                <div class="user-role" id="nav-role">Sales Executive</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav">
+            <div class="nav-item" onclick="navActivate('section-my-profile'); loadMyProfile()"><i class="fas fa-user-circle"></i> My Profile</div>
+            <div class="nav-item" onclick="navActivate('section-my-leads'); loadMyLeads()"><i class="fas fa-list-alt"></i> My Leads</div>
+            <div class="nav-item" onclick="navActivate('section-change-password')"><i class="fas fa-key"></i> Change Password</div>
+        </nav>
+        <div style="padding: 16px 18px; border-top: 1px solid var(--border); margin-top: auto;">
+            <button class="btn btn-outline btn-sm" style="width: 100%;" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+    
+    <main class="main-content">
+        <!-- MY PROFILE -->
+        <div id="section-my-profile" class="section">
+            <div class="topbar">
+                <div>
+                    <div class="page-title">My Profile</div>
+                    <div class="page-sub">Your personal information and account details</div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="loadMyProfile()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+            <div id="profile-content"></div>
+        </div>
+        
+        <!-- MY LEADS -->
+        <div id="section-my-leads" class="section">
+            <div class="topbar">
+                <div>
+                    <div class="page-title">My Leads</div>
+                    <div class="page-sub" id="my-leads-sub"></div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="loadMyLeads()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+            <div class="stats-grid" id="my-leads-stats"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-calendar-check" style="color: var(--accent3);"></i> Today's Follow-ups</div>
+                    </div>
+                    <div class="card-body">
+                        <div id="my-todays-followups" class="leads-grid"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-calendar-alt" style="color: var(--accent);"></i> Upcoming Follow-ups</div>
+                    </div>
+                    <div class="card-body">
+                        <div id="my-upcoming-followups" class="leads-grid"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-list-alt"></i> All My Leads</div>
+                    <div style="display: flex; gap: 10px;">
+                        <select class="select-filter" id="my-leads-type-filter" onchange="filterMyLeads()" style="font-size: 12px; padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text);">
+                            <option value="">All Types</option>
+                            <option value="HOT">Hot</option>
+                            <option value="WARM">Warm</option>
+                            <option value="COLD">Cold</option>
+                        </select>
+                        <select class="select-filter" id="my-leads-stage-filter" onchange="filterMyLeads()" style="font-size: 12px; padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text);">
+                            <option value="">All Stages</option>
+                            <option value="INTERESTED">Interested</option>
+                            <option value="NOT_INTERESTED">Not Interested</option>
+                            <option value="NORMAL">Normal</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="my-leads-grid" class="leads-grid"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CHANGE PASSWORD -->
+        <div id="section-change-password" class="section">
+            <div class="topbar">
+                <div>
+                    <div class="page-title">Change Password</div>
+                    <div class="page-sub">Update your account security</div>
+                </div>
+            </div>
+            <div class="card" style="max-width: 500px;">
+                <div class="card-body">
+                    <form onsubmit="handleChangePassword(event)">
+                        <div class="form-group">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="cur-pass" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new-pass" required oninput="checkPassStrength(this.value)">
+                            <div class="pass-strength">
+                                <div class="pass-strength-bar" id="pass-strength-bar"></div>
+                            </div>
+                            <div class="page-sub" style="margin-top: 6px; font-size: 10px;">Min 8 chars, uppercase, number, special character</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm-pass" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-lock"></i> Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODALS -->
+
+<!-- Lead Detail Modal -->
+<div class="modal-overlay" id="lead-detail-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <div class="modal-title" id="detail-modal-title">Lead Details</div>
+            <button class="modal-close" onclick="closeModal('lead-detail-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="lead-detail-content"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('lead-detail-modal')">Close</button>
+            <button class="btn btn-primary" onclick="openLeadUpdateModal()"><i class="fas fa-edit"></i> Update Lead</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lead Update Modal -->
+<div class="modal-overlay" id="lead-update-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <div class="modal-title">Update Lead Progress</div>
+            <button class="modal-close" onclick="closeModal('lead-update-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="update-lead-id">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab(this, 'tab-contact')">Contact & Activity</div>
+                <div class="tab" onclick="switchTab(this, 'tab-followup')">Follow-up</div>
+                <div class="tab" onclick="switchTab(this, 'tab-stage')">Stage & Notes</div>
+            </div>
+            <div id="tab-contact" class="tab-panel">
+                <div class="update-section" style="background: var(--surface2); border-radius: var(--radius-sm); padding: 18px; margin-bottom: 18px;">
+                    <div class="update-section-title" style="font-weight: 600; margin-bottom: 14px; font-size: 14px;"><i class="fas fa-phone-volume"></i> Activity Tracking</div>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-item"><input type="checkbox" id="upd-contact-made"> 📞 Contact Made</label>
+                        <label class="checkbox-item"><input type="checkbox" id="upd-call"> 📱 Call Made</label>
+                        <label class="checkbox-item"><input type="checkbox" id="upd-meeting-booked"> 📅 Meeting Booked</label>
+                        <label class="checkbox-item"><input type="checkbox" id="upd-meeting-done"> ✅ Meeting Done</label>
+                        <label class="checkbox-item"><input type="checkbox" id="upd-convert"> 🎯 Convert to Customer</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Response / Notes</label>
+                    <textarea class="form-control" id="upd-response" rows="3" placeholder="What was the customer's response?"></textarea>
+                </div>
+            </div>
+            <div id="tab-followup" class="tab-panel" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Next Follow-up Date</label>
+                    <input type="date" class="form-control" id="upd-followup-date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Follow-up Description</label>
+                    <textarea class="form-control" id="upd-followup-desc" rows="3" placeholder="What needs to be done next?"></textarea>
+                </div>
+            </div>
+            <div id="tab-stage" class="tab-panel" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Lead Stage</label>
+                    <select class="form-control" id="upd-stage">
+                        <option value="">No Change</option>
+                        <option value="INTERESTED">✅ Interested</option>
+                        <option value="NOT_INTERESTED">❌ Not Interested</option>
+                        <option value="NORMAL">📌 Normal</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Remarks</label>
+                    <textarea class="form-control" id="upd-remarks" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('lead-update-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="submitLeadUpdate()"><i class="fas fa-save"></i> Save Update</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lead History Modal -->
+<div class="modal-overlay" id="lead-history-modal">
+    <div class="modal modal-xl">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-history" style="color: var(--accent);"></i> Lead History - Audit Trail</div>
+            <button class="modal-close" onclick="closeModal('lead-history-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div id="history-lead-info" class="card" style="margin-bottom: 20px;"></div>
+            <div class="filter-chips" id="history-filter-chips" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                <button class="filter-chip active" data-filter="all" onclick="filterHistory('all')" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer;">All</button>
+                <button class="filter-chip" data-filter="CREATE" onclick="filterHistory('CREATE')" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer;"><i class="fas fa-plus-circle"></i> Created</button>
+                <button class="filter-chip" data-filter="UPDATE" onclick="filterHistory('UPDATE')" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer;"><i class="fas fa-edit"></i> Updates</button>
+                <button class="filter-chip" data-filter="STAGE_CHANGE" onclick="filterHistory('STAGE_CHANGE')" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer;"><i class="fas fa-exchange-alt"></i> Stage Changes</button>
+                <button class="filter-chip" data-filter="STATISTICS_UPDATE" onclick="filterHistory('STATISTICS_UPDATE')" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer;"><i class="fas fa-chart-bar"></i> Statistics</button>
+                <button class="filter-chip" data-filter="CONTACT_MADE" onclick="filterHistory('CONTACT_MADE')" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer;"><i class="fas fa-phone"></i> Contacts</button>
+                <button class="filter-chip" data-filter="FOLLOWUP_UPDATE" onclick="filterHistory('FOLLOWUP_UPDATE')" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer;"><i class="fas fa-calendar-alt"></i> Follow-ups</button>
+            </div>
+            <div id="lead-history-content" class="history-timeline"></div>
+            <div id="history-summary" style="margin-top: 20px;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('lead-history-modal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // CONFIGURATION & GLOBAL STATE
+    // ============================================================
+    const BASE = '';
+    let token = localStorage.getItem('crm_token') || '';
+    let currentRole = localStorage.getItem('crm_role') || '';
+    let currentUserEmail = localStorage.getItem('crm_email') || '';
+    
+    let allMyLeads = [];
+    let currentLeadDetail = null;
+    let currentHistoryData = [];
+    let currentHistoryLead = null;
+    let currentHistoryFilter = 'all';
+
+    // ============================================================
+    // API HELPER
+    // ============================================================
+    async function api(method, path, body = null, auth = true) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (auth && token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const opts = { method, headers };
+        if (body) opts.body = JSON.stringify(body);
+        
+        const res = await fetch(BASE + path, opts);
+        
+        if (res.status === 401) {
+            handleLogout();
+            throw new Error('Session expired. Please login again.');
+        }
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.message || data.error || 'Request failed');
+        }
+        return data;
+    }
+
+    // ============================================================
+    // UI Helpers
+    // ============================================================
+    function toast(msg, type = 'success') {
+        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        el.innerHTML = `<i class="fas ${icons[type] || icons.success}"></i><span>${msg}</span>`;
+        container.appendChild(el);
+        setTimeout(() => {
+            el.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => el.remove(), 300);
+        }, 4000);
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function formatDate(d) {
+        if (!d) return '-';
+        try {
+            const date = new Date(d);
+            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch { return d; }
+    }
+
+    function formatDateTime(d) {
+        if (!d) return '-';
+        try {
+            const date = new Date(d);
+            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch { return d; }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function renderLeadCard(lead, showUpdateBtn = true) {
+        return `
+            <div class="lead-card" onclick="viewLeadDetail('${lead.id}')">
+                <div class="lead-card-header">
+                    <span class="lead-card-name">${escapeHtml(lead.name)}</span>
+                    <span class="badge badge-${(lead.leadType || '').toLowerCase()}">${lead.leadType || 'N/A'}</span>
+                </div>
+                <div class="lead-card-detail"><i class="fas fa-envelope"></i> ${escapeHtml(lead.email)}</div>
+                <div class="lead-card-detail"><i class="fas fa-phone"></i> ${lead.phoneNumber || 'N/A'}</div>
+                <div class="lead-card-detail">
+                    <i class="fas fa-chart-line"></i> Stage: <span class="badge badge-${(lead.leadStage || '').toLowerCase()}">${lead.leadStage || 'N/A'}</span>
+                    <i class="fas fa-calendar-alt" style="margin-left: 12px;"></i> Follow-up: ${formatDate(lead.nextFollowUpDate)}
+                </div>
+                <div class="lead-card-stats">
+                    <div class="lead-card-stat"><div class="number">${lead.callsMadeCount || 0}</div><div class="label">Calls</div></div>
+                    <div class="lead-card-stat"><div class="number">${lead.meetingsBookedCount || 0}</div><div class="label">Booked</div></div>
+                    <div class="lead-card-stat"><div class="number">${lead.meetingsDoneCount || 0}</div><div class="label">Done</div></div>
+                </div>
+                <div class="lead-card-footer">
+                    <span><i class="fas fa-tag"></i> ${escapeHtml(lead.source || 'N/A')}</span>
+                    <span><i class="fas fa-sync-alt"></i> Updates: ${lead.updateCount || 0}</span>
+                </div>
+                <div class="lead-actions" onclick="event.stopPropagation()">
+                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${lead.id}')"><i class="fas fa-eye"></i> View</button>
+                    ${showUpdateBtn ? `<button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${lead.id}')"><i class="fas fa-edit"></i> Update</button>` : ''}
+                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${lead.id}')"><i class="fas fa-history"></i> History</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // LEAD HISTORY FUNCTIONS
+    // ============================================================
+    async function viewLeadHistory(id) {
+        const content = document.getElementById('lead-history-content');
+        const leadInfoDiv = document.getElementById('history-lead-info');
+        if (!content) return;
+        
+        content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading history...</div>';
+        openModal('lead-history-modal');
+        currentHistoryFilter = 'all';
+        
+        document.querySelectorAll('#history-filter-chips .filter-chip').forEach(chip => {
+            chip.classList.remove('active');
+            if (chip.dataset.filter === 'all') chip.classList.add('active');
+        });
+        
+        try {
+            const leadRes = await api('GET', `/api/employee/my-leads/${id}`);
+            currentHistoryLead = leadRes.data;
+            
+            if (leadInfoDiv) {
+                leadInfoDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <strong style="font-size: 16px;">${escapeHtml(currentHistoryLead.name)}</strong>
+                            <div style="font-size: 12px; color: var(--text2); margin-top: 4px;">
+                                ${escapeHtml(currentHistoryLead.email)} | ${currentHistoryLead.phoneNumber}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <span class="badge badge-${(currentHistoryLead.leadType || '').toLowerCase()}">${currentHistoryLead.leadType || 'N/A'}</span>
+                            <span class="badge badge-${(currentHistoryLead.leadStage || '').toLowerCase()}">${currentHistoryLead.leadStage || 'N/A'}</span>
+                            <span class="badge badge-website">${escapeHtml(currentHistoryLead.source || 'N/A')}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            const historyRes = await api('GET', `/api/employee/my-leads/${id}/history`);
+            currentHistoryData = historyRes.data || [];
+            
+            renderHistoryTimeline(currentHistoryData);
+            renderHistorySummary(currentHistoryData);
+            
+        } catch (err) {
+            content.innerHTML = `<div class="empty-state">Error loading history: ${err.message}</div>`;
+            if (leadInfoDiv) leadInfoDiv.innerHTML = '';
+        }
+    }
+    
+    function filterHistory(filterType) {
+        currentHistoryFilter = filterType;
+        
+        document.querySelectorAll('#history-filter-chips .filter-chip').forEach(chip => {
+            chip.classList.remove('active');
+            if (chip.dataset.filter === filterType) chip.classList.add('active');
+        });
+        
+        let filteredData = currentHistoryData;
+        if (filterType !== 'all') {
+            filteredData = currentHistoryData.filter(h => h.action === filterType);
+        }
+        
+        renderHistoryTimeline(filteredData);
+        renderHistorySummary(filteredData);
+    }
+    
+    function renderHistoryTimeline(historyData) {
+        const content = document.getElementById('lead-history-content');
+        if (!content) return;
+        
+        if (!historyData || historyData.length === 0) {
+            content.innerHTML = '<div class="empty-state">No history records found for this filter</div>';
+            return;
+        }
+        
+        const sortedHistory = [...historyData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        content.innerHTML = sortedHistory.map((item, index) => {
+            const changes = parseChanges(item);
+            const isLatest = index === 0;
+            
+            return `
+                <div class="history-item" style="position: relative; background: var(--surface2); border-radius: var(--radius-sm); margin-bottom: 20px; border-left: 3px solid ${isLatest ? 'var(--accent3)' : 'var(--accent)'}; overflow: hidden;">
+                    <div class="history-header" style="padding: 16px 20px; background: var(--surface3); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            ${getActionBadge(item.action)}
+                            <div class="history-time" style="font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-calendar-alt"></i> ${formatDateTime(item.createdAt)}
+                            </div>
+                        </div>
+                        <div class="history-time" style="font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-user"></i>
+                            ${item.employee ? `${escapeHtml(item.employee.firstName)} ${escapeHtml(item.employee.lastName)}` : 'System'}
+                        </div>
+                    </div>
+                    <div class="history-body" style="padding: 16px 20px;">
+                        ${item.remarks ? `<div class="history-remarks" style="margin-top: 12px; padding: 10px; background: rgba(59,130,246,0.08); border-radius: var(--radius-xs); font-size: 12px; color: var(--text2); font-style: italic;"><i class="fas fa-comment"></i> ${escapeHtml(item.remarks)}</div>` : ''}
+                        ${changes.length > 0 ? `
+                            <div class="history-changes-list" style="margin-top: 12px;">
+                                <div style="font-size: 11px; color: var(--text3); margin-bottom: 8px;"><i class="fas fa-list-ul"></i> Changes Made:</div>
+                                ${changes.map(change => `
+                                    <div class="change-item" style="background: var(--surface); border-radius: var(--radius-xs); padding: 12px; margin-bottom: 8px; border-left: 2px solid var(--accent3);">
+                                        <div class="change-field" style="font-weight: 700; font-size: 12px; color: var(--accent); margin-bottom: 6px;"><i class="fas fa-pen"></i> ${escapeHtml(change.field)}</div>
+                                        <div class="change-values" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 12px;">
+                                            <span class="old-value" style="color: var(--hot); text-decoration: line-through;"><i class="fas fa-arrow-left"></i> ${escapeHtml(change.oldValue) || '<em>Not set</em>'}</span>
+                                            <i class="fas fa-arrow-right arrow-icon" style="color: var(--text3); font-size: 12px;"></i>
+                                            <span class="new-value" style="color: var(--accent3); font-weight: 500;"><i class="fas fa-arrow-right"></i> ${escapeHtml(change.newValue) || '<em>Not set</em>'}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${item.changes && !item.detailedChanges ? `<div style="margin-top: 12px;"><i class="fas fa-info-circle"></i> ${escapeHtml(item.changes)}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    function parseChanges(item) {
+        const changes = [];
+        
+        if (item.detailedChanges && typeof item.detailedChanges === 'object') {
+            for (const [key, change] of Object.entries(item.detailedChanges)) {
+                if (change.oldValue !== change.newValue) {
+                    changes.push({ field: key, oldValue: change.oldValue || '', newValue: change.newValue || '' });
+                }
+            }
+        }
+        
+        if (changes.length === 0 && item.changes) {
+            changes.push({ field: 'Details', oldValue: '', newValue: item.changes });
+        }
+        
+        return changes;
+    }
+    
+    function renderHistorySummary(historyData) {
+        const summaryDiv = document.getElementById('history-summary');
+        if (!summaryDiv) return;
+        if (!historyData || historyData.length === 0) { summaryDiv.innerHTML = ''; return; }
+        
+        const totalUpdates = historyData.length;
+        const createCount = historyData.filter(h => h.action === 'CREATE').length;
+        const updateCount = historyData.filter(h => h.action === 'UPDATE').length;
+        const stageChanges = historyData.filter(h => h.action === 'STAGE_CHANGE').length;
+        const contacts = historyData.filter(h => h.action === 'CONTACT_MADE').length;
+        const uniqueUsers = [...new Set(historyData.map(h => h.employee?.email || 'System'))];
+        
+        summaryDiv.innerHTML = `
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 0;">
+                <div class="stat-card"><div class="stat-value">${totalUpdates}</div><div class="stat-label">Total Updates</div></div>
+                <div class="stat-card"><div class="stat-value">${createCount}</div><div class="stat-label">Created</div></div>
+                <div class="stat-card"><div class="stat-value">${updateCount}</div><div class="stat-label">Updates</div></div>
+                <div class="stat-card"><div class="stat-value">${stageChanges}</div><div class="stat-label">Stage Changes</div></div>
+                <div class="stat-card"><div class="stat-value">${contacts}</div><div class="stat-label">Contacts Made</div></div>
+            </div>
+            <div style="margin-top: 12px; font-size: 12px; color: var(--text2); text-align: center;">
+                <i class="fas fa-users"></i> Contributors: ${uniqueUsers.length} unique user(s)
+            </div>
+        `;
+    }
+    
+    function getActionBadge(action) {
+        const badges = {
+            'CREATE': 'badge-create', 'UPDATE': 'badge-update', 'STAGE_CHANGE': 'badge-stage',
+            'STATISTICS_UPDATE': 'badge-stat', 'CONTACT_MADE': 'badge-contact', 'FOLLOWUP_UPDATE': 'badge-info'
+        };
+        const icons = {
+            'CREATE': 'fa-plus-circle', 'UPDATE': 'fa-edit', 'STAGE_CHANGE': 'fa-exchange-alt',
+            'STATISTICS_UPDATE': 'fa-chart-line', 'CONTACT_MADE': 'fa-phone', 'FOLLOWUP_UPDATE': 'fa-calendar-check'
+        };
+        const labels = {
+            'CREATE': 'Lead Created', 'UPDATE': 'Lead Updated', 'STAGE_CHANGE': 'Stage Changed',
+            'STATISTICS_UPDATE': 'Statistics Updated', 'CONTACT_MADE': 'Contact Made', 'FOLLOWUP_UPDATE': 'Follow-up Updated'
+        };
+        return `<span class="history-badge ${badges[action] || 'badge-info'}" style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+            <i class="fas ${icons[action] || 'fa-history'}"></i> ${labels[action] || action}
+        </span>`;
+    }
+
+    // ============================================================
+    // AUTHENTICATION
+    // ============================================================
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('login-btn');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner"></span> Signing in...';
+        btn.disabled = true;
+        
+        try {
+            const data = await api('POST', '/api/auth/login', {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            }, false);
+            
+            token = data.data.token;
+            currentRole = data.data.role;
+            currentUserEmail = data.data.email;
+            
+            if (currentRole !== 'EMPLOYEE') {
+                toast('Access denied. Employee credentials required.', 'error');
+                return;
+            }
+            
+            localStorage.setItem('crm_token', token);
+            localStorage.setItem('crm_role', currentRole);
+            localStorage.setItem('crm_email', currentUserEmail);
+            
+            toast(`Welcome ${currentUserEmail}! Logged in as ${currentRole}`);
+            initApp();
+        } catch (err) {
+            toast(err.message, 'error');
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    }
+
+    async function handleLogout() {
+        try { await api('POST', '/api/auth/logout'); } catch (e) {}
+        token = ''; currentRole = ''; currentUserEmail = '';
+        localStorage.removeItem('crm_token');
+        localStorage.removeItem('crm_role');
+        localStorage.removeItem('crm_email');
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('login-page').style.display = 'flex';
+        toast('Signed out successfully', 'info');
+    }
+
+    async function validateToken() {
+        try { await api('GET', '/api/auth/validate'); return true; }
+        catch { return false; }
+    }
+
+    // ============================================================
+    // APP INITIALIZATION
+    // ============================================================
+    function initApp() {
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        setupNav();
+        navActivate('section-my-profile');
+        loadMyProfile();
+        loadMyLeads();
+    }
+
+    function setupNav() {
+        const displayName = currentUserEmail?.split('@')[0] || 'Employee';
+        document.getElementById('nav-username').textContent = displayName;
+        document.getElementById('nav-role').textContent = 'Sales Executive';
+        document.getElementById('nav-avatar').textContent = (currentUserEmail?.charAt(0) || 'E').toUpperCase();
+    }
+
+    function navActivate(sectionId) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+        
+        // Update active nav item
+        const navItems = document.querySelectorAll('.nav-item');
+        const sectionMap = {
+            'section-my-profile': 0,
+            'section-my-leads': 1,
+            'section-change-password': 2
+        };
+        if (navItems[sectionMap[sectionId]]) {
+            navItems[sectionMap[sectionId]].classList.add('active');
+        }
+    }
+
+    // ============================================================
+    // MY PROFILE
+    // ============================================================
+    async function loadMyProfile() {
+        const container = document.getElementById('profile-content');
+        container.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading profile...</div>';
+        
+        try {
+            const res = await api('GET', '/api/employee/profile');
+            const p = res.data;
+            
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</div></div>
+                            <div class="info-item"><div class="info-label">Employee Code</div><div class="info-value">${p.employeeCode || 'N/A'}</div></div>
+                            <div class="info-item"><div class="info-label">Email</div><div class="info-value">${escapeHtml(p.email)}</div></div>
+                            <div class="info-item"><div class="info-label">Department</div><div class="info-value">${escapeHtml(p.department || '-')}</div></div>
+                            <div class="info-item"><div class="info-label">Position</div><div class="info-value">${escapeHtml(p.position || '-')}</div></div>
+                            <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${p.phoneNumber || '-'}</div></div>
+                            <div class="info-item"><div class="info-label">Joining Date</div><div class="info-value">${formatDate(p.joiningDate)}</div></div>
+                            <div class="info-item"><div class="info-label">Salary</div><div class="info-value">₹${(p.salary || 0).toLocaleString()}</div></div>
+                            <div class="info-item"><div class="info-label">Status</div><div class="info-value"><span class="badge ${p.isActive ? 'badge-active' : 'badge-inactive'}">${p.isActive ? 'Active' : 'Inactive'}</span></div></div>
+                            <div class="info-item"><div class="info-label">Member Since</div><div class="info-value">${formatDateTime(p.createdAt)}</div></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            container.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+        }
+    }
+
+    // ============================================================
+    // MY LEADS
+    // ============================================================
+    async function loadMyLeads() {
+        try {
+            const res = await api('GET', '/api/employee/my-leads');
+            allMyLeads = res.data || [];
+            
+            document.getElementById('my-leads-sub').textContent = `${allMyLeads.length} leads assigned to you`;
+            
+            const hot = allMyLeads.filter(l => l.leadType === 'HOT').length;
+            const warm = allMyLeads.filter(l => l.leadType === 'WARM').length;
+            const cold = allMyLeads.filter(l => l.leadType === 'COLD').length;
+            const interested = allMyLeads.filter(l => l.leadStage === 'INTERESTED').length;
+            const normal = allMyLeads.filter(l => l.leadStage === 'NORMAL').length;
+            const notInterested = allMyLeads.filter(l => l.leadStage === 'NOT_INTERESTED').length;
+            
+            document.getElementById('my-leads-stats').innerHTML = `
+                <div class="stat-card"><div class="stat-value">${allMyLeads.length}</div><div class="stat-label">Total Leads</div></div>
+                <div class="stat-card"><div class="stat-value">${hot}</div><div class="stat-label">🔥 Hot</div></div>
+                <div class="stat-card"><div class="stat-value">${warm}</div><div class="stat-label">🌤 Warm</div></div>
+                <div class="stat-card"><div class="stat-value">${cold}</div><div class="stat-label">❄️ Cold</div></div>
+                <div class="stat-card"><div class="stat-value">${interested}</div><div class="stat-label">✅ Interested</div></div>
+                <div class="stat-card"><div class="stat-value">${normal}</div><div class="stat-label">📌 Normal</div></div>
+                <div class="stat-card"><div class="stat-value">${notInterested}</div><div class="stat-label">❌ Not Interested</div></div>
+            `;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayFollowups = allMyLeads.filter(l => l.nextFollowUpDate === today);
+            const upcomingFollowups = allMyLeads.filter(l => l.nextFollowUpDate && l.nextFollowUpDate > today).slice(0, 6);
+            
+            const todayContainer = document.getElementById('my-todays-followups');
+            if (todayFollowups.length === 0) {
+                todayContainer.innerHTML = '<div class="empty-state">No follow-ups scheduled for today</div>';
+            } else {
+                todayContainer.innerHTML = todayFollowups.map(l => renderLeadCard(l, true)).join('');
+            }
+            
+            const upcomingContainer = document.getElementById('my-upcoming-followups');
+            if (upcomingFollowups.length === 0) {
+                upcomingContainer.innerHTML = '<div class="empty-state">No upcoming follow-ups</div>';
+            } else {
+                upcomingContainer.innerHTML = upcomingFollowups.map(l => renderLeadCard(l, true)).join('');
+            }
+            
+            renderMyLeads(allMyLeads);
+        } catch (err) {
+            toast('Error loading my leads: ' + err.message, 'error');
+        }
+    }
+
+    function filterMyLeads() {
+        const type = document.getElementById('my-leads-type-filter').value;
+        const stage = document.getElementById('my-leads-stage-filter').value;
+        
+        const filtered = allMyLeads.filter(l => {
+            const matchType = !type || l.leadType === type;
+            const matchStage = !stage || l.leadStage === stage;
+            return matchType && matchStage;
+        });
+        renderMyLeads(filtered);
+    }
+
+    function renderMyLeads(leads) {
+        const container = document.getElementById('my-leads-grid');
+        if (!leads.length) {
+            container.innerHTML = '<div class="empty-state">No leads found</div>';
+            return;
+        }
+        container.innerHTML = leads.map(l => renderLeadCard(l, true)).join('');
+    }
+
+    // ============================================================
+    // LEAD DETAILS
+    // ============================================================
+    async function viewLeadDetail(id) {
+        const content = document.getElementById('lead-detail-content');
+        content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading...</div>';
+        openModal('lead-detail-modal');
+        
+        try {
+            const res = await api('GET', `/api/employee/my-leads/${id}`);
+            const l = res.data;
+            currentLeadDetail = l;
+            
+            content.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item"><div class="info-label">Lead Name</div><div class="info-value">${escapeHtml(l.name)}</div></div>
+                    <div class="info-item"><div class="info-label">Email</div><div class="info-value">${escapeHtml(l.email)}</div></div>
+                    <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${l.phoneNumber}</div></div>
+                    <div class="info-item"><div class="info-label">Lead Type</div><div class="info-value"><span class="badge badge-${(l.leadType || '').toLowerCase()}">${l.leadType}</span></div></div>
+                    <div class="info-item"><div class="info-label">Lead Stage</div><div class="info-value"><span class="badge badge-${(l.leadStage || '').toLowerCase()}">${l.leadStage}</span></div></div>
+                    <div class="info-item"><div class="info-label">Source</div><div class="info-value">${escapeHtml(l.source || '-')}</div></div>
+                    <div class="info-item"><div class="info-label">Assigned To</div><div class="info-value">${l.assignedEmployee?.firstName || '-'} ${l.assignedEmployee?.lastName || ''}</div></div>
+                    <div class="info-item"><div class="info-label">Next Follow-up</div><div class="info-value">${formatDate(l.nextFollowUpDate)}</div></div>
+                    <div class="info-item col-span-2"><div class="info-label">Remarks</div><div class="info-value">${escapeHtml(l.remarks || '-')}</div></div>
+                    <div class="info-item col-span-2"><div class="info-label">Follow-up Plan</div><div class="info-value">${escapeHtml(l.nextFollowUp || '-')}</div></div>
+                </div>
+                <hr style="border-color: var(--border); margin: 20px 0;">
+                <div class="info-grid">
+                    <div class="info-item"><div class="info-label">Calls Made</div><div class="info-value">${l.callsMadeCount || 0}</div></div>
+                    <div class="info-item"><div class="info-label">Meetings Booked</div><div class="info-value">${l.meetingsBookedCount || 0}</div></div>
+                    <div class="info-item"><div class="info-label">Meetings Done</div><div class="info-value">${l.meetingsDoneCount || 0}</div></div>
+                    <div class="info-item"><div class="info-label">Update Count</div><div class="info-value">${l.updateCount || 0}</div></div>
+                    <div class="info-item"><div class="info-label">Last Updated By</div><div class="info-value">${escapeHtml(l.lastUpdatedBy || '-')}</div></div>
+                    <div class="info-item"><div class="info-label">Last Contact</div><div class="info-value">${formatDateTime(l.lastContactDate)}</div></div>
+                    <div class="info-item"><div class="info-label">Created At</div><div class="info-value">${formatDateTime(l.createdAt)}</div></div>
+                    <div class="info-item"><div class="info-label">Last Updated</div><div class="info-value">${formatDateTime(l.updatedAt)}</div></div>
+                </div>
+            `;
+        } catch (err) {
+            content.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+        }
+    }
+
+    // ============================================================
+    // LEAD UPDATE
+    // ============================================================
+    function openLeadUpdateModal(id = null) {
+        const leadId = id || (currentLeadDetail ? currentLeadDetail.id : null);
+        if (!leadId) {
+            toast('No lead selected', 'error');
+            return;
+        }
+        
+        document.getElementById('update-lead-id').value = leadId;
+        ['upd-contact-made', 'upd-call', 'upd-meeting-booked', 'upd-meeting-done', 'upd-convert'].forEach(ckId => {
+            const el = document.getElementById(ckId);
+            if (el) el.checked = false;
+        });
+        document.getElementById('upd-response').value = '';
+        document.getElementById('upd-followup-date').value = '';
+        document.getElementById('upd-followup-desc').value = '';
+        document.getElementById('upd-stage').value = '';
+        document.getElementById('upd-remarks').value = '';
+        
+        openModal('lead-update-modal');
+    }
+
+    async function submitLeadUpdate() {
+        const id = document.getElementById('update-lead-id').value;
+        
+        const body = {
+            contactMade: document.getElementById('upd-contact-made')?.checked || false,
+            callsMade: document.getElementById('upd-call')?.checked || false,
+            meetingBooked: document.getElementById('upd-meeting-booked')?.checked || false,
+            meetingDone: document.getElementById('upd-meeting-done')?.checked || false,
+            convertToCustomer: document.getElementById('upd-convert')?.checked || false,
+            responseMessage: document.getElementById('upd-response')?.value || null,
+            nextFollowUpDate: document.getElementById('upd-followup-date')?.value || null,
+            nextFollowUpDescription: document.getElementById('upd-followup-desc')?.value || null,
+            newLeadStage: document.getElementById('upd-stage')?.value || null,
+            remarks: document.getElementById('upd-remarks')?.value || null
+        };
+        
+        try {
+            await api('PUT', `/api/employee/my-leads/${id}/update`, body);
+            toast('Lead updated successfully!');
+            closeModal('lead-update-modal');
+            await loadMyLeads();
+            if (currentLeadDetail && currentLeadDetail.id === id) {
+                await viewLeadDetail(id);
+            }
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
+    function switchTab(tabElement, tabId) {
+        document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+        tabElement.classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+        document.getElementById(tabId).style.display = 'block';
+    }
+
+    // ============================================================
+    // CHANGE PASSWORD
+    // ============================================================
+    function checkPassStrength(val) {
+        let strength = 0;
+        if (val.length >= 8) strength++;
+        if (/[A-Z]/.test(val)) strength++;
+        if (/[0-9]/.test(val)) strength++;
+        if (/[@#$%^&+=!]/.test(val)) strength++;
+        const bar = document.getElementById('pass-strength-bar');
+        if (bar) bar.style.width = (strength * 25) + '%';
+    }
+
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        const currentPassword = document.getElementById('cur-pass').value;
+        const newPassword = document.getElementById('new-pass').value;
+        const confirmPassword = document.getElementById('confirm-pass').value;
+        
+        if (newPassword !== confirmPassword) {
+            toast('New passwords do not match!', 'error');
+            return;
+        }
+        
+        try {
+            await api('POST', '/api/auth/change-password', { currentPassword, newPassword });
+            toast('Password changed successfully!');
+            document.getElementById('cur-pass').value = '';
+            document.getElementById('new-pass').value = '';
+            document.getElementById('confirm-pass').value = '';
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+    window.addEventListener('DOMContentLoaded', async () => {
+        if (token && currentRole) {
+            const valid = await validateToken();
+            if (valid && currentRole === 'EMPLOYEE') {
+                initApp();
+            } else {
+                token = ''; currentRole = ''; currentUserEmail = '';
+                localStorage.removeItem('crm_token');
+                localStorage.removeItem('crm_role');
+                localStorage.removeItem('crm_email');
+            }
+        }
+    });
+    
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) overlay.classList.remove('open');
+        });
+    });
+</script>
+
+</body>
+</html>
