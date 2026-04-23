@@ -1074,82 +1074,16 @@
     </div>
 </section>
 
-<!-- Video Resources Section -->
+<!-- Video Resources Section - Dynamically Loaded from API -->
 <section class="videos-section" id="videos">
     <div class="section-header">
         <h2><i class="fas fa-video"></i> Educational Videos</h2>
         <p style="color: var(--text2);">Learn about insurance and financial planning</p>
     </div>
-    <div class="videos-grid">
-        <div class="video-card">
-            <div class="video-wrapper">
-                <iframe
-                        src="https://www.youtube.com/embed/-YlmnPh-6rE?si=O54-72XGKLOhkGKX"
-                        title="Understanding Life Insurance"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                </iframe>
-            </div>
-            <div class="video-content">
-                <div class="video-title">
-                    <i class="fab fa-youtube"></i>
-                    Understanding Life Insurance
-                </div>
-                <p class="video-description">
-                    Learn the basics of life insurance, types of policies, and how to choose the right coverage for your family's future.
-                </p>
-                <div class="video-duration">
-                    <i class="fas fa-clock"></i> Duration: 5:32 mins
-                </div>
-            </div>
-        </div>
-        
-        <div class="video-card">
-            <div class="video-wrapper">
-                <iframe
-                        
-                        src="https://www.youtube.com/embed/-YlmnPh-6rE?si=O54-72XGKLOhkGKX"
-                        
-                        title="Health Insurance Guide"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                </iframe>
-            </div>
-            <div class="video-content">
-                <div class="video-title">
-                    <i class="fab fa-youtube"></i>
-                    Complete Health Insurance Guide
-                </div>
-                <p class="video-description">
-                    Everything you need to know about health insurance - from coverage options to claim process and network hospitals.
-                </p>
-                <div class="video-duration">
-                    <i class="fas fa-clock"></i> Duration: 8:15 mins
-                </div>
-            </div>
-        </div>
-        
-        <div class="video-card">
-            <div class="video-wrapper">
-                <iframe
-                        src="https://www.youtube.com/embed/-YlmnPh-6rE?si=O54-72XGKLOhkGKX"
-                        title="Investment Planning"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                </iframe>
-            </div>
-            <div class="video-content">
-                <div class="video-title">
-                    <i class="fab fa-youtube"></i>
-                    Smart Investment Planning
-                </div>
-                <p class="video-description">
-                    Discover investment options for wealth creation, retirement planning, and tax saving strategies.
-                </p>
-                <div class="video-duration">
-                    <i class="fas fa-clock"></i> Duration: 6:45 mins
-                </div>
-            </div>
+    <div class="videos-grid" id="videos-grid">
+        <div class="banners-loading">
+            <div class="spinner"></div>
+            <p>Loading videos...</p>
         </div>
     </div>
 </section>
@@ -1285,9 +1219,10 @@
     // API Base URL
     const API_BASE_URL = window.location.origin;
 
-    // Load banners on page load
+    // Load banners and videos on page load
     document.addEventListener('DOMContentLoaded', function() {
         loadBanners();
+        loadYouTubeVideos();
     });
 
     // Function to load banners from API
@@ -1297,9 +1232,7 @@
             const data = await response.json();
             
             if (data.success && data.data && data.data.length > 0) {
-                // Store all banners for view all
                 window.allBanners = data.data;
-                // Display only latest 4 banners
                 displayBanners(data.data.slice(0, 4));
             } else {
                 displayNoBanners();
@@ -1308,6 +1241,77 @@
             console.error('Error loading banners:', error);
             displayNoBanners();
         }
+    }
+
+    // Function to load YouTube videos from API
+    async function loadYouTubeVideos() {
+        const videosGrid = document.getElementById('videos-grid');
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/website/youtube-videos`);
+            const data = await response.json();
+            
+            if (data.success && data.data && data.data.length > 0) {
+                displayYouTubeVideos(data.data);
+            } else {
+                videosGrid.innerHTML = `
+                    <div class="no-banners" style="grid-column: span 3;">
+                        <i class="fab fa-youtube fa-3x"></i>
+                        <p>No videos available. Check back soon for educational content!</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading YouTube videos:', error);
+            videosGrid.innerHTML = `
+                <div class="no-banners" style="grid-column: span 3;">
+                    <i class="fas fa-video fa-3x"></i>
+                    <p>Unable to load videos. Please try again later.</p>
+                </div>
+            `;
+        }
+    }
+
+    // Function to display YouTube videos
+    function displayYouTubeVideos(videos) {
+        const videosGrid = document.getElementById('videos-grid');
+        
+        if (!videos || videos.length === 0) {
+            videosGrid.innerHTML = `
+                <div class="no-banners" style="grid-column: span 3;">
+                    <i class="fab fa-youtube fa-3x"></i>
+                    <p>No videos available. Check back soon for educational content!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        videosGrid.innerHTML = videos.map(video => `
+            <div class="video-card">
+                <div class="video-wrapper">
+                    <iframe
+                        src="${video.iframeUrl}"
+                        title="${escapeHtml(video.title)}"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="video-content">
+                    <div class="video-title">
+                        <i class="fab fa-youtube"></i>
+                        ${escapeHtml(video.title)}
+                    </div>
+                    <p class="video-description">
+                        ${escapeHtml(video.description || 'Watch this informative video to learn more about our services.')}
+                    </p>
+                    ${video.duration ? `
+                    <div class="video-duration">
+                        <i class="fas fa-clock"></i> Duration: ${escapeHtml(video.duration)}
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('');
     }
 
     // Function to display banners

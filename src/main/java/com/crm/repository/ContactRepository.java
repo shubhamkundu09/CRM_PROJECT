@@ -33,5 +33,10 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
                                  Pageable pageable);
 
     boolean existsByEmail(String email);
+
     boolean existsByPhoneNumber(String phoneNumber);
+
+    List<Contact> findByIsActiveTrue();
+
+    List<Contact> findByIsActiveFalse();
 }

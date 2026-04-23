@@ -41,10 +41,11 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/logout",
                                 "/api/auth/validate",
-                                "/api/website/**",   // Public website endpoints
-                                "/api/chatbot/**",   // Public chatbot endpoints
-                                "/api/images/**",    // ADD THIS - Public image endpoints
-                                "/api/website/banners/**"
+                                "/api/website/**",
+                                "/api/chatbot/**",
+                                "/api/images/**",
+                                "/api/website/banners/**",
+                                "/api/website/youtube-videos/**"
                         ).permitAll()
 
                         // Static resources

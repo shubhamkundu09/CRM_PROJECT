@@ -53,6 +53,7 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public ContactDTO getContactById(Long id) {
+        log.info("Fetching contact with ID: {}", id);
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with ID: " + id));
         return mapToDTO(contact);
@@ -60,6 +61,8 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public ContactDetailDTO getContactWithLeads(Long id) {
+        log.info("Fetching contact with leads for ID: {}", id);
+
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with ID: " + id));
 
@@ -76,18 +79,23 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public Page<ContactDTO> getAllContacts(Pageable pageable) {
+        log.info("Fetching all contacts with pagination - page: {}, size: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
         return contactRepository.findAll(pageable)
                 .map(this::mapToDTO);
     }
 
     @Override
     public Page<ContactDTO> searchContacts(String name, String email, String phone, Pageable pageable) {
+        log.info("Searching contacts - name: {}, email: {}, phone: {}", name, email, phone);
         return contactRepository.searchContacts(name, email, phone, pageable)
                 .map(this::mapToDTO);
     }
 
     @Override
     public List<LeadSummaryDTO> getContactLeads(Long contactId) {
+        log.info("Fetching leads for contact ID: {}", contactId);
+
         Contact contact = contactRepository.findById(contactId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with ID: " + contactId));
 
@@ -99,14 +107,18 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public ContactDTO updateContact(Long id, ContactDTO contactDTO) {
+        log.info("Updating contact with ID: {}", id);
+
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with ID: " + id));
 
+        // Check email uniqueness if changed
         if (!contact.getEmail().equalsIgnoreCase(contactDTO.getEmail()) &&
                 contactRepository.existsByEmail(contactDTO.getEmail().toLowerCase())) {
             throw new DuplicateResourceException("Email already exists: " + contactDTO.getEmail());
         }
 
+        // Check phone number uniqueness if changed
         if (!contact.getPhoneNumber().equals(contactDTO.getPhoneNumber()) &&
                 contactRepository.existsByPhoneNumber(contactDTO.getPhoneNumber())) {
             throw new DuplicateResourceException("Phone number already exists: " + contactDTO.getPhoneNumber());
@@ -125,8 +137,15 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public void deactivateContact(Long id) {
+        log.info("Deactivating contact with ID: {}", id);
+
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with ID: " + id));
+
+        if (!contact.getIsActive()) {
+            log.warn("Contact with ID: {} is already deactivated", id);
+            throw new IllegalStateException("Contact is already deactivated");
+        }
 
         contact.setIsActive(false);
         contactRepository.save(contact);
@@ -135,8 +154,78 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public long getTotalContactsCount() {
+        log.info("Fetching total contacts count");
         return contactRepository.count();
     }
+
+    @Override
+    public ContactDTO createContact(ContactDTO contactDTO) {
+        log.info("Creating new contact with email: {}", contactDTO.getEmail());
+
+        // Check for duplicate email
+        if (contactRepository.existsByEmail(contactDTO.getEmail().toLowerCase())) {
+            throw new DuplicateResourceException("Email already exists: " + contactDTO.getEmail());
+        }
+
+        // Check for duplicate phone
+        if (contactRepository.existsByPhoneNumber(contactDTO.getPhoneNumber())) {
+            throw new DuplicateResourceException("Phone number already exists: " + contactDTO.getPhoneNumber());
+        }
+
+        Contact contact = Contact.builder()
+                .name(contactDTO.getName())
+                .email(contactDTO.getEmail().toLowerCase())
+                .phoneNumber(contactDTO.getPhoneNumber())
+                .address(contactDTO.getAddress())
+                .isActive(true)
+                .build();
+
+        Contact savedContact = contactRepository.save(contact);
+        log.info("Created new contact with ID: {}", savedContact.getId());
+
+        return mapToDTO(savedContact);
+    }
+
+    @Override
+    public ContactDTO reactivateContact(Long id) {
+        log.info("Reactivating contact with ID: {}", id);
+
+        Contact contact = contactRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with ID: " + id));
+
+        if (contact.getIsActive()) {
+            log.warn("Contact with ID: {} is already active", id);
+            throw new IllegalStateException("Contact is already active");
+        }
+
+        contact.setIsActive(true);
+        Contact reactivatedContact = contactRepository.save(contact);
+        log.info("Reactivated contact with ID: {}", id);
+
+        return mapToDTO(reactivatedContact);
+    }
+
+    @Override
+    public List<ContactDTO> getActiveContacts() {
+        log.info("Fetching all active contacts");
+
+        return contactRepository.findAll().stream()
+                .filter(Contact::getIsActive)
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ContactDTO> getInactiveContacts() {
+        log.info("Fetching all inactive contacts");
+
+        return contactRepository.findAll().stream()
+                .filter(contact -> !contact.getIsActive())
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ==================== MAPPING METHODS ====================
 
     private ContactDTO mapToDTO(Contact contact) {
         return ContactDTO.builder()
@@ -146,7 +235,8 @@ public class ContactServiceImpl implements ContactService {
                 .phoneNumber(contact.getPhoneNumber())
                 .address(contact.getAddress())
                 .isActive(contact.getIsActive())
-                .totalLeads(contact.getLeads() != null ? contact.getLeads().size() : 0)
+                .totalLeads(contact.getLeads() != null ?
+                        (int) contact.getLeads().stream().filter(Lead::getIsActive).count() : 0)
                 .createdAt(contact.getCreatedAt())
                 .updatedAt(contact.getUpdatedAt())
                 .build();

@@ -4,10 +4,7 @@ import com.crm.dto.*;
 import com.crm.entity.Employee;
 import com.crm.entity.LeadStage;
 import com.crm.entity.LeadType;
-import com.crm.service.EmployeeService;
-import com.crm.service.LeadHistoryService;
-import com.crm.service.LeadService;
-import com.crm.service.WebsiteLeadService;
+import com.crm.service.*;
 import com.crm.util.CryptoUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -37,6 +34,7 @@ public class AdminController {
     private final LeadService leadService;
     private final LeadHistoryService leadHistoryService;
     private final WebsiteLeadService websiteLeadService;
+    private final YouTubeVideoService youTubeVideoService;
 
     // ==================== EMPLOYEE MANAGEMENT ====================
 
@@ -344,4 +342,93 @@ public class AdminController {
         LeadResponseDTO lead = websiteLeadService.assignWebsiteLead(decryptedId, employeeId);
         return ResponseEntity.ok(ApiResponse.success(lead, "Website lead assigned successfully", request.getRequestURI()));
     }
+
+
+
+
+
+//    ======================= youtube videos api for website =========================
+
+    // ==================== YOUTUBE VIDEO MANAGEMENT ====================
+
+    @PostMapping("/youtube-videos")
+    public ResponseEntity<ApiResponse<YouTubeVideoDTO>> createYouTubeVideo(
+            @Valid @RequestBody YouTubeVideoCreateDTO createDTO,
+            HttpServletRequest request) {
+        log.info("Admin creating new YouTube video with title: {}", createDTO.getTitle());
+        YouTubeVideoDTO createdVideo = youTubeVideoService.createVideo(createDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(createdVideo, "YouTube video created successfully", request.getRequestURI()));
+    }
+
+    @PutMapping("/youtube-videos/{id}")
+    public ResponseEntity<ApiResponse<YouTubeVideoDTO>> updateYouTubeVideo(
+            @PathVariable Long id,
+            @Valid @RequestBody YouTubeVideoUpdateDTO updateDTO,
+            HttpServletRequest request) {
+        updateDTO.setId(id);
+        log.info("Admin updating YouTube video with ID: {}", id);
+        YouTubeVideoDTO updatedVideo = youTubeVideoService.updateVideo(updateDTO);
+        return ResponseEntity.ok(ApiResponse.success(updatedVideo, "YouTube video updated successfully", request.getRequestURI()));
+    }
+
+    @DeleteMapping("/youtube-videos/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteYouTubeVideo(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        log.info("Admin deleting YouTube video with ID: {}", id);
+        youTubeVideoService.deleteVideo(id);
+        return ResponseEntity.ok(ApiResponse.success("YouTube video deleted successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/youtube-videos/{id}")
+    public ResponseEntity<ApiResponse<YouTubeVideoDTO>> getYouTubeVideoById(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        log.info("Admin fetching YouTube video with ID: {}", id);
+        YouTubeVideoDTO video = youTubeVideoService.getVideoById(id);
+        return ResponseEntity.ok(ApiResponse.success(video, "YouTube video retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/youtube-videos")
+    public ResponseEntity<ApiResponse<Page<YouTubeVideoDTO>>> getAllYouTubeVideos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletRequest request) {
+        log.info("Admin fetching all YouTube videos - page: {}, size: {}", page, size);
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<YouTubeVideoDTO> videos = youTubeVideoService.getAllVideos(pageable);
+        return ResponseEntity.ok(ApiResponse.success(videos, "YouTube videos retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/youtube-videos/all")
+    public ResponseEntity<ApiResponse<List<YouTubeVideoDTO>>> getAllYouTubeVideosList(HttpServletRequest request) {
+        log.info("Admin fetching all YouTube videos as list");
+        List<YouTubeVideoDTO> videos = youTubeVideoService.getAllVideosList();
+        return ResponseEntity.ok(ApiResponse.success(videos, "YouTube videos retrieved successfully", request.getRequestURI()));
+    }
+
+    @PatchMapping("/youtube-videos/{id}/toggle-status")
+    public ResponseEntity<ApiResponse<YouTubeVideoDTO>> toggleYouTubeVideoStatus(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        log.info("Admin toggling status for YouTube video with ID: {}", id);
+        YouTubeVideoDTO video = youTubeVideoService.toggleVideoStatus(id);
+        return ResponseEntity.ok(ApiResponse.success(video, "YouTube video status updated successfully", request.getRequestURI()));
+    }
+
+    @PatchMapping("/youtube-videos/{id}/order")
+    public ResponseEntity<ApiResponse<YouTubeVideoDTO>> updateYouTubeVideoOrder(
+            @PathVariable Long id,
+            @RequestParam Integer displayOrder,
+            HttpServletRequest request) {
+        log.info("Admin updating display order for YouTube video ID: {} to {}", id, displayOrder);
+        YouTubeVideoDTO video = youTubeVideoService.updateVideoOrder(id, displayOrder);
+        return ResponseEntity.ok(ApiResponse.success(video, "YouTube video order updated successfully", request.getRequestURI()));
+    }
 }
+
+

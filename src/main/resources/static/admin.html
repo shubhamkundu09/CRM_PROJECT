@@ -164,6 +164,7 @@
         .info-item { padding: 12px; background: var(--surface2); border-radius: var(--radius-sm); }
         .info-label { font-size: 11px; color: var(--text2); text-transform: uppercase; margin-bottom: 6px; }
         .info-value { font-weight: 600; font-size: 14px; }
+        .col-span-2 { grid-column: span 2; }
         
         /* History */
         .history-timeline { position: relative; padding: 0; }
@@ -204,6 +205,19 @@
         .pagination button.active { background: var(--accent); border-color: var(--accent); }
         
         .banner-image-preview { width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 12px; }
+        
+        /* Video Grid */
+        .videos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .video-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: all 0.2s; }
+        .video-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--glow); }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .video-content { padding: 16px; }
+        .video-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .video-title i { color: #ff0000; }
+        .video-description { font-size: 12px; color: var(--text2); margin-bottom: 10px; line-height: 1.4; }
+        .video-duration { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 5px; }
+        .video-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
         
         @media (max-width: 1024px) { .sidebar { transform: translateX(-100%); transition: transform 0.3s; } .main-content { margin-left: 0; padding: 20px; } .form-grid { grid-template-columns: 1fr; } .form-grid .col-span-2 { grid-column: span 1; } }
         @media (max-width: 768px) { .login-grid { grid-template-columns: 1fr; } .login-left { display: none; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .leads-grid { grid-template-columns: 1fr; } }
@@ -273,6 +287,7 @@
             <div class="nav-item" onclick="navActivate('section-followups'); loadFollowUps()"><i class="fas fa-calendar-check"></i> Follow-ups</div>
             <div class="nav-item" onclick="navActivate('section-lead-stats'); loadLeadStatistics()"><i class="fas fa-chart-line"></i> Analytics</div>
             <div class="nav-item" onclick="navActivate('section-banners'); loadBanners()"><i class="fas fa-images"></i> Banner Management</div>
+            <div class="nav-item" onclick="navActivate('section-youtube'); loadYouTubeVideos()"><i class="fab fa-youtube"></i> YouTube Videos</div>
             <div class="nav-item" onclick="navActivate('section-change-password')"><i class="fas fa-key"></i> Change Password</div>
         </nav>
         <div style="padding: 16px 18px; border-top: 1px solid var(--border); margin-top: auto;">
@@ -552,6 +567,37 @@
             </div>
         </div>
         
+        <!-- YOUTUBE VIDEO MANAGEMENT -->
+        <div id="section-youtube" class="section">
+            <div class="topbar">
+                <div>
+                    <div class="page-title"><i class="fab fa-youtube"></i> YouTube Video Management</div>
+                    <div class="page-sub">Manage educational videos displayed on the website</div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openCreateYouTubeVideo()">
+                    <i class="fas fa-plus"></i> Add YouTube Video
+                </button>
+            </div>
+            <div class="filter-bar">
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" id="youtube-search" placeholder="Search videos by title..." oninput="filterYouTubeVideos()">
+                </div>
+                <select class="select-filter" id="youtube-status-filter" onchange="filterYouTubeVideos()">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="loadYouTubeVideos()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div id="youtube-videos-grid" class="videos-grid"></div>
+                    <div class="pagination" id="youtube-pagination"></div>
+                </div>
+            </div>
+        </div>
+        
         <!-- CHANGE PASSWORD -->
         <div id="section-change-password" class="section">
             <div class="topbar">
@@ -810,9 +856,7 @@
     <div class="modal modal-xl">
         <div class="modal-header">
             <div class="modal-title"><i class="fas fa-history" style="color: var(--accent);"></i> Lead History - Complete Audit Trail</div>
-            <div style="display: flex; gap: 8px;">
-                <button class="modal-close" onclick="closeModal('lead-history-modal')"><i class="fas fa-times"></i></button>
-            </div>
+            <button class="modal-close" onclick="closeModal('lead-history-modal')"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
             <div id="history-lead-info" class="card" style="margin-bottom: 20px;"></div>
@@ -886,6 +930,62 @@
     </div>
 </div>
 
+<!-- YouTube Video Modal -->
+<div class="modal-overlay" id="youtube-modal">
+    <div class="modal modal-md">
+        <div class="modal-header">
+            <div class="modal-title" id="youtube-modal-title">Add YouTube Video</div>
+            <button class="modal-close" onclick="closeModal('youtube-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="youtube-form">
+                <div class="form-group">
+                    <label class="form-label">Video Title *</label>
+                    <input type="text" class="form-control" id="video-title" required placeholder="Enter video title...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">YouTube URL / Embed Code *</label>
+                    <input type="text" class="form-control" id="video-url" required placeholder="https://www.youtube.com/watch?v=... or embed URL">
+                    <div class="page-sub" style="margin-top: 6px; font-size: 10px;">Supports: youtube.com/watch, youtu.be, or youtube.com/embed/ formats</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="video-description" rows="3" placeholder="Enter video description..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Duration</label>
+                    <input type="text" class="form-control" id="video-duration" placeholder="e.g., 5:32 mins">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Display Order</label>
+                    <input type="number" class="form-control" id="video-order" value="0" placeholder="Lower number = higher priority">
+                </div>
+                <input type="hidden" id="video-id">
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('youtube-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="handleYouTubeVideoSubmit()">
+                <i class="fas fa-save"></i> Save Video
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- YouTube Video Detail Modal -->
+<div class="modal-overlay" id="youtube-detail-modal">
+    <div class="modal modal-md">
+        <div class="modal-header">
+            <div class="modal-title">YouTube Video Details</div>
+            <button class="modal-close" onclick="closeModal('youtube-detail-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="youtube-detail-content"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('youtube-detail-modal')">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ============================================================
     // CONFIGURATION & GLOBAL STATE
@@ -911,6 +1011,12 @@
     let currentBannerPage = 0;
     let currentBannerSize = 12;
     let currentBannerTotal = 0;
+
+    // YouTube Video variables
+    let allYouTubeVideos = [];
+    let currentYouTubePage = 0;
+    let currentYouTubeSize = 12;
+    let currentYouTubeTotal = 0;
 
     // ============================================================
     // API HELPER
@@ -983,39 +1089,248 @@
         });
     }
 
-    function renderFullLeadCard(lead, isAdmin = true, showUpdateBtn = true) {
-        return `
-            <div class="lead-card" onclick="viewLeadDetail('${lead.id}')">
-                <div class="lead-card-header">
-                    <span class="lead-card-name">${escapeHtml(lead.name)}</span>
-                    <span class="badge badge-${(lead.leadType || '').toLowerCase()}">${lead.leadType || 'N/A'}</span>
+    function encryptId(id) {
+        if (!id) return null;
+        return btoa(id.toString());
+    }
+
+    // ============================================================
+    // YOUTUBE VIDEO FUNCTIONS
+    // ============================================================
+    
+    async function loadYouTubeVideos(page = 0) {
+        currentYouTubePage = page;
+        try {
+            const res = await api('GET', `/api/admin/youtube-videos?page=${page}&size=${currentYouTubeSize}&sortBy=displayOrder&sortDir=asc`);
+            const pageData = res.data;
+            allYouTubeVideos = pageData.content || [];
+            currentYouTubeTotal = pageData.totalElements;
+            renderYouTubeVideos(allYouTubeVideos);
+            renderPaginationForYouTube('youtube-pagination', currentYouTubePage, currentYouTubeTotal, currentYouTubeSize, loadYouTubeVideos);
+        } catch (err) {
+            toast('Error loading YouTube videos: ' + err.message, 'error');
+        }
+    }
+
+    function renderPaginationForYouTube(containerId, currentPage, totalElements, pageSize, callback) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        const totalPages = Math.ceil(totalElements / pageSize);
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        if (currentPage > 0) {
+            html += `<button onclick="loadYouTubeVideos(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+        }
+        
+        const startPage = Math.max(0, currentPage - 2);
+        const endPage = Math.min(totalPages - 1, currentPage + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<button class="${i === currentPage ? 'active' : ''}" onclick="loadYouTubeVideos(${i})">${i + 1}</button>`;
+        }
+        
+        if (currentPage < totalPages - 1) {
+            html += `<button onclick="loadYouTubeVideos(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+        }
+        
+        container.innerHTML = html;
+    }
+
+    function filterYouTubeVideos() {
+        const search = document.getElementById('youtube-search').value.toLowerCase();
+        const status = document.getElementById('youtube-status-filter').value;
+        
+        let filtered = allYouTubeVideos;
+        if (search) {
+            filtered = filtered.filter(v => v.title.toLowerCase().includes(search));
+        }
+        if (status) {
+            filtered = filtered.filter(v => status === 'active' ? v.isActive : !v.isActive);
+        }
+        renderYouTubeVideos(filtered);
+    }
+
+    function renderYouTubeVideos(videos) {
+        const container = document.getElementById('youtube-videos-grid');
+        if (!videos || videos.length === 0) {
+            container.innerHTML = '<div class="empty-state">No YouTube videos found. Click "Add YouTube Video" to create one.</div>';
+            return;
+        }
+        
+        container.innerHTML = videos.map(video => `
+            <div class="video-card" onclick="viewYouTubeVideoDetail(${video.id})">
+                <div class="video-wrapper">
+                    <iframe
+                        src="${video.iframeUrl}"
+                        title="${escapeHtml(video.title)}"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
                 </div>
-                <div class="lead-card-detail"><i class="fas fa-envelope"></i> ${escapeHtml(lead.email)}</div>
-                <div class="lead-card-detail"><i class="fas fa-phone"></i> ${lead.phoneNumber || 'N/A'}</div>
-                <div class="lead-card-detail">
-                    <i class="fas fa-user-tie"></i> Assigned to: <strong>${lead.assignedEmployee?.firstName || 'Unassigned'} ${lead.assignedEmployee?.lastName || ''}</strong>
-                </div>
-                <div class="lead-card-detail">
-                    <i class="fas fa-chart-line"></i> Stage: <span class="badge badge-${(lead.leadStage || '').toLowerCase()}">${lead.leadStage || 'N/A'}</span>
-                    <i class="fas fa-calendar-alt" style="margin-left: 12px;"></i> Follow-up: ${formatDate(lead.nextFollowUpDate)}
-                </div>
-                <div class="lead-card-stats">
-                    <div class="lead-card-stat"><div class="number">${lead.callsMadeCount || 0}</div><div class="label">Calls</div></div>
-                    <div class="lead-card-stat"><div class="number">${lead.meetingsBookedCount || 0}</div><div class="label">Booked</div></div>
-                    <div class="lead-card-stat"><div class="number">${lead.meetingsDoneCount || 0}</div><div class="label">Done</div></div>
-                </div>
-                <div class="lead-card-footer">
-                    <span><i class="fas fa-tag"></i> ${escapeHtml(lead.source || 'N/A')}</span>
-                    <span><i class="fas fa-sync-alt"></i> Updates: ${lead.updateCount || 0}</span>
-                </div>
-                <div class="lead-actions" onclick="event.stopPropagation()">
-                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${lead.id}')"><i class="fas fa-eye"></i> View</button>
-                    ${showUpdateBtn ? `<button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${lead.id}', true)"><i class="fas fa-edit"></i> Update</button>` : ''}
-                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${lead.id}')"><i class="fas fa-history"></i> History</button>
-                    <button class="btn btn-danger btn-xs" onclick="deleteLead('${lead.id}')"><i class="fas fa-trash"></i> Delete</button>
+                <div class="video-content">
+                    <div class="video-title">
+                        <i class="fab fa-youtube"></i>
+                        ${escapeHtml(video.title)}
+                        <span class="badge ${video.isActive ? 'badge-active' : 'badge-inactive'}" style="margin-left: auto;">
+                            ${video.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                    <p class="video-description">
+                        ${escapeHtml(video.description || 'No description provided.')}
+                    </p>
+                    ${video.duration ? `
+                    <div class="video-duration">
+                        <i class="fas fa-clock"></i> Duration: ${escapeHtml(video.duration)}
+                    </div>
+                    ` : ''}
+                    <div class="video-duration">
+                        <i class="fas fa-sort-numeric-down"></i> Order: ${video.displayOrder || 0}
+                    </div>
+                    <div class="video-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-outline btn-xs" onclick="viewYouTubeVideoDetail(${video.id})"><i class="fas fa-eye"></i> View</button>
+                        <button class="btn btn-primary btn-xs" onclick="openEditYouTubeVideo(${video.id})"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-warning btn-xs" onclick="toggleYouTubeVideoStatus(${video.id})">
+                            <i class="fas ${video.isActive ? 'fa-ban' : 'fa-play'}"></i> ${video.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button class="btn btn-danger btn-xs" onclick="deleteYouTubeVideo(${video.id})"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </div>
                 </div>
             </div>
-        `;
+        `).join('');
+    }
+
+    function openCreateYouTubeVideo() {
+        document.getElementById('youtube-modal-title').textContent = 'Add YouTube Video';
+        document.getElementById('youtube-form').reset();
+        document.getElementById('video-id').value = '';
+        openModal('youtube-modal');
+    }
+
+    async function openEditYouTubeVideo(id) {
+        try {
+            const res = await api('GET', `/api/admin/youtube-videos/${id}`);
+            const video = res.data;
+            
+            document.getElementById('youtube-modal-title').textContent = 'Edit YouTube Video';
+            document.getElementById('video-id').value = video.id;
+            document.getElementById('video-title').value = video.title;
+            document.getElementById('video-url').value = video.iframeUrl;
+            document.getElementById('video-description').value = video.description || '';
+            document.getElementById('video-duration').value = video.duration || '';
+            document.getElementById('video-order').value = video.displayOrder || 0;
+            
+            openModal('youtube-modal');
+        } catch (err) {
+            toast('Error loading video: ' + err.message, 'error');
+        }
+    }
+
+    async function handleYouTubeVideoSubmit() {
+        const id = document.getElementById('video-id').value;
+        const title = document.getElementById('video-title').value;
+        const iframeUrl = document.getElementById('video-url').value;
+        const description = document.getElementById('video-description').value;
+        const duration = document.getElementById('video-duration').value;
+        const displayOrder = document.getElementById('video-order').value;
+        
+        if (!title || !iframeUrl) {
+            toast('Please enter video title and URL', 'error');
+            return;
+        }
+        
+        const body = { title, iframeUrl, description, duration, displayOrder: parseInt(displayOrder) || 0 };
+        
+        try {
+            if (id) {
+                await api('PUT', `/api/admin/youtube-videos/${id}`, body);
+                toast('YouTube video updated successfully!');
+            } else {
+                await api('POST', '/api/admin/youtube-videos', body);
+                toast('YouTube video created successfully!');
+            }
+            closeModal('youtube-modal');
+            await loadYouTubeVideos(currentYouTubePage);
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
+    async function toggleYouTubeVideoStatus(id) {
+        try {
+            await api('PATCH', `/api/admin/youtube-videos/${id}/toggle-status`);
+            toast('Video status updated successfully');
+            await loadYouTubeVideos(currentYouTubePage);
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
+    async function deleteYouTubeVideo(id) {
+        if (!confirm('⚠️ PERMANENT DELETE: This will completely remove the video. Cannot undo! Continue?')) return;
+        try {
+            await api('DELETE', `/api/admin/youtube-videos/${id}`);
+            toast('YouTube video permanently deleted');
+            await loadYouTubeVideos(currentYouTubePage);
+        } catch (err) {
+            toast(err.message, 'error');
+        }
+    }
+
+    async function viewYouTubeVideoDetail(id) {
+        const content = document.getElementById('youtube-detail-content');
+        content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading...</div>';
+        openModal('youtube-detail-modal');
+        
+        try {
+            const res = await api('GET', `/api/admin/youtube-videos/${id}`);
+            const video = res.data;
+            
+            content.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item col-span-2">
+                        <div class="info-label">Video Preview</div>
+                        <div class="video-wrapper" style="padding-bottom: 56.25%; position: relative; margin-top: 10px;">
+                            <iframe src="${video.iframeUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div class="info-item col-span-2">
+                        <div class="info-label">Title</div>
+                        <div class="info-value">${escapeHtml(video.title)}</div>
+                    </div>
+                    <div class="info-item col-span-2">
+                        <div class="info-label">Description</div>
+                        <div class="info-value">${escapeHtml(video.description || '-')}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Duration</div>
+                        <div class="info-value">${escapeHtml(video.duration || '-')}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Display Order</div>
+                        <div class="info-value">${video.displayOrder || 0}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Status</div>
+                        <div class="info-value"><span class="badge ${video.isActive ? 'badge-active' : 'badge-inactive'}">${video.isActive ? 'Active' : 'Inactive'}</span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Created At</div>
+                        <div class="info-value">${formatDateTime(video.createdAt)}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Last Updated</div>
+                        <div class="info-value">${formatDateTime(video.updatedAt)}</div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            content.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+        }
     }
 
     // ============================================================
@@ -1078,6 +1393,7 @@
                     <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${l.id}')"><i class="fas fa-eye"></i></button>
                     <button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${l.id}', true)"><i class="fas fa-edit"></i></button>
                     <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${l.id}')"><i class="fas fa-history"></i></button>
+                    <button class="btn btn-warning btn-xs" onclick="openReassignLeadModal('${l.id}')"><i class="fas fa-user-friends"></i> Assign</button>
                     <button class="btn btn-danger btn-xs" onclick="deleteLead('${l.id}')"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
@@ -1120,6 +1436,85 @@
         document.getElementById('leads-employee-filter').value = '';
         document.getElementById('leads-followup-date').value = '';
         searchLeads(0);
+    }
+
+    // ============================================================
+    // REASSIGN LEAD MODAL
+    // ============================================================
+    
+    let currentReassignLeadId = null;
+    
+    async function openReassignLeadModal(leadId) {
+        currentReassignLeadId = leadId;
+        
+        try {
+            const res = await api('GET', '/api/admin/employees/active');
+            const activeEmployees = res.data || [];
+            
+            const content = `
+                <div class="form-group">
+                    <label class="form-label">Select Employee to Assign</label>
+                    <select class="form-control" id="reassign-employee-select">
+                        <option value="">Select Employee</option>
+                        ${activeEmployees.map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)} (${escapeHtml(e.department || 'N/A')})</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Remarks (Optional)</label>
+                    <textarea class="form-control" id="reassign-remarks" rows="2" placeholder="Add any remarks about this reassignment..."></textarea>
+                </div>
+            `;
+            
+            showCustomModal('Reassign Lead', content, async () => {
+                const employeeId = document.getElementById('reassign-employee-select').value;
+                if (!employeeId) {
+                    toast('Please select an employee', 'error');
+                    return false;
+                }
+                
+                try {
+                    await api('PUT', `/api/admin/leads/${currentReassignLeadId}`, {
+                        assignedEmployeeId: encryptId(employeeId)
+                    });
+                    toast('Lead reassigned successfully!');
+                    searchLeads(currentLeadsPage);
+                    return true;
+                } catch (err) {
+                    toast(err.message, 'error');
+                    return false;
+                }
+            });
+        } catch (err) {
+            toast('Error loading employees: ' + err.message, 'error');
+        }
+    }
+    
+    function showCustomModal(title, content, onConfirm) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.opacity = '1';
+        modal.style.pointerEvents = 'all';
+        modal.innerHTML = `
+            <div class="modal modal-sm">
+                <div class="modal-header">
+                    <div class="modal-title">${title}</div>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    ${content}
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                    <button class="btn btn-primary" id="custom-modal-confirm">Confirm</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        document.getElementById('custom-modal-confirm').onclick = async () => {
+            const success = await onConfirm();
+            if (success) modal.remove();
+        };
     }
 
     // ============================================================
@@ -1373,6 +1768,7 @@
         loadLeadStatistics();
         loadEmployeeFilter();
         loadBanners();
+        loadYouTubeVideos();
         searchLeads(0);
     }
     
@@ -1381,8 +1777,13 @@
             const res = await api('GET', '/api/admin/employees/active');
             const employees = res.data || [];
             const select = document.getElementById('leads-employee-filter');
+            const wlSelect = document.getElementById('wl-employee');
             if (select) {
                 select.innerHTML = '<option value="">All Employees</option>' +
+                    employees.map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)}</option>`).join('');
+            }
+            if (wlSelect) {
+                wlSelect.innerHTML = '<option value="">No change</option>' +
                     employees.map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)}</option>`).join('');
             }
         } catch (err) {
@@ -1442,6 +1843,42 @@
         } catch (err) {
             toast('Dashboard error: ' + err.message, 'error');
         }
+    }
+
+    function renderFullLeadCard(lead, isAdmin = true, showUpdateBtn = true) {
+        return `
+            <div class="lead-card" onclick="viewLeadDetail('${lead.id}')">
+                <div class="lead-card-header">
+                    <span class="lead-card-name">${escapeHtml(lead.name)}</span>
+                    <span class="badge badge-${(lead.leadType || '').toLowerCase()}">${lead.leadType || 'N/A'}</span>
+                </div>
+                <div class="lead-card-detail"><i class="fas fa-envelope"></i> ${escapeHtml(lead.email)}</div>
+                <div class="lead-card-detail"><i class="fas fa-phone"></i> ${lead.phoneNumber || 'N/A'}</div>
+                <div class="lead-card-detail">
+                    <i class="fas fa-user-tie"></i> Assigned to: <strong>${lead.assignedEmployee?.firstName || 'Unassigned'} ${lead.assignedEmployee?.lastName || ''}</strong>
+                </div>
+                <div class="lead-card-detail">
+                    <i class="fas fa-chart-line"></i> Stage: <span class="badge badge-${(lead.leadStage || '').toLowerCase()}">${lead.leadStage || 'N/A'}</span>
+                    <i class="fas fa-calendar-alt" style="margin-left: 12px;"></i> Follow-up: ${formatDate(lead.nextFollowUpDate)}
+                </div>
+                <div class="lead-card-stats">
+                    <div class="lead-card-stat"><div class="number">${lead.callsMadeCount || 0}</div><div class="label">Calls</div></div>
+                    <div class="lead-card-stat"><div class="number">${lead.meetingsBookedCount || 0}</div><div class="label">Booked</div></div>
+                    <div class="lead-card-stat"><div class="number">${lead.meetingsDoneCount || 0}</div><div class="label">Done</div></div>
+                </div>
+                <div class="lead-card-footer">
+                    <span><i class="fas fa-tag"></i> ${escapeHtml(lead.source || 'N/A')}</span>
+                    <span><i class="fas fa-sync-alt"></i> Updates: ${lead.updateCount || 0}</span>
+                </div>
+                <div class="lead-actions" onclick="event.stopPropagation()">
+                    <button class="btn btn-outline btn-xs" onclick="viewLeadDetail('${lead.id}')"><i class="fas fa-eye"></i> View</button>
+                    ${showUpdateBtn ? `<button class="btn btn-primary btn-xs" onclick="openLeadUpdateModal('${lead.id}', true)"><i class="fas fa-edit"></i> Update</button>` : ''}
+                    <button class="btn btn-purple btn-xs" onclick="viewLeadHistory('${lead.id}')"><i class="fas fa-history"></i> History</button>
+                    <button class="btn btn-warning btn-xs" onclick="openReassignLeadModal('${lead.id}')"><i class="fas fa-user-friends"></i> Assign</button>
+                    <button class="btn btn-danger btn-xs" onclick="deleteLead('${lead.id}')"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>
+        `;
     }
 
     function renderLeadsGrid(leads, containerId, isAdmin = false) {
@@ -1796,71 +2233,53 @@
     }
 
     // ============================================================
-    // WEBSITE LEADS
-    // ============================================================
-    async function loadWebsiteLeads() {
-        try {
-            const res = await api('GET', '/api/admin/website-leads');
-            allWebsiteLeads = res.data || [];
-            document.getElementById('wl-count-sub').textContent = `${allWebsiteLeads.length} total website leads`;
-            renderWebsiteLeads(allWebsiteLeads);
-        } catch (err) {
-            toast('Error: ' + err.message, 'error');
-        }
-    }
-
-    function filterWebsiteLeads() {
-        const search = document.getElementById('wl-search').value.toLowerCase();
-        const stage = document.getElementById('wl-stage-filter').value;
-        const type = document.getElementById('wl-type-filter').value;
-        
-        const filtered = allWebsiteLeads.filter(l => {
-            const matchSearch = !search || `${l.name} ${l.email}`.toLowerCase().includes(search);
-            const matchStage = !stage || l.leadStage === stage;
-            const matchType = !type || l.leadType === type;
-            return matchSearch && matchStage && matchType;
-        });
-        renderWebsiteLeads(filtered);
-    }
-
-    function renderWebsiteLeads(leads) {
-        const container = document.getElementById('website-leads-grid');
-        if (!leads.length) {
-            container.innerHTML = '<div class="empty-state">No website leads found</div>';
-            return;
-        }
-        
-        container.innerHTML = leads.map(l => renderFullLeadCard(l, true, true)).join('');
-    }
-
-    // ============================================================
     // CREATE/UPDATE LEAD
     // ============================================================
-    function openCreateLead() {
+    async function openCreateLead() {
         document.getElementById('lead-modal-title').textContent = 'Add New Lead';
         document.getElementById('lead-form').reset();
         document.getElementById('lead-id').value = '';
         
-        if (!allEmployees.length) loadEmployees();
-        
-        const empSelect = document.getElementById('lead-employee');
-        empSelect.innerHTML = '<option value="">Select Employee</option>' +
-            allEmployees.filter(e => e.isActive).map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)}</option>`).join('');
-        
-        document.getElementById('lead-followup-date').min = new Date().toISOString().split('T')[0];
-        openModal('lead-modal');
+        try {
+            const res = await api('GET', '/api/admin/employees/active');
+            const activeEmployees = res.data || [];
+            
+            const empSelect = document.getElementById('lead-employee');
+            if (activeEmployees.length === 0) {
+                empSelect.innerHTML = '<option value="">No active employees found</option>';
+                toast('No active employees available to assign leads', 'warning');
+            } else {
+                empSelect.innerHTML = '<option value="">Select Employee</option>' +
+                    activeEmployees.map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)} (${escapeHtml(e.department || 'N/A')})</option>`).join('');
+            }
+            
+            document.getElementById('lead-followup-date').min = new Date().toISOString().split('T')[0];
+            openModal('lead-modal');
+        } catch (err) {
+            toast('Error loading employees: ' + err.message, 'error');
+            const empSelect = document.getElementById('lead-employee');
+            empSelect.innerHTML = '<option value="">Error loading employees</option>';
+            openModal('lead-modal');
+        }
     }
 
     async function handleLeadSubmit(e) {
         e.preventDefault();
         const id = document.getElementById('lead-id').value;
+        const assignedEmployeeId = document.getElementById('lead-employee').value;
+        
+        if (!assignedEmployeeId) {
+            toast('Please select an employee to assign this lead', 'error');
+            return;
+        }
+        
         const body = {
             name: document.getElementById('lead-name').value,
             email: document.getElementById('lead-email').value,
             phoneNumber: document.getElementById('lead-phone').value,
             leadType: document.getElementById('lead-type').value,
             leadStage: document.getElementById('lead-stage').value,
-            assignedEmployeeId: document.getElementById('lead-employee').value,
+            assignedEmployeeId: encryptId(assignedEmployeeId),
             nextFollowUpDate: document.getElementById('lead-followup-date').value,
             remarks: document.getElementById('lead-remarks').value,
             nextFollowUp: document.getElementById('lead-next-followup').value,
@@ -1931,6 +2350,66 @@
             `;
         } catch (err) {
             content.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+        }
+    }
+
+    // ============================================================
+    // WEBSITE LEADS
+    // ============================================================
+    async function loadWebsiteLeads() {
+        try {
+            const res = await api('GET', '/api/admin/website-leads');
+            allWebsiteLeads = res.data || [];
+            document.getElementById('wl-count-sub').textContent = `${allWebsiteLeads.length} total website leads`;
+            renderWebsiteLeads(allWebsiteLeads);
+            await loadEmployeeFilter();
+        } catch (err) {
+            toast('Error: ' + err.message, 'error');
+        }
+    }
+
+    function filterWebsiteLeads() {
+        const search = document.getElementById('wl-search').value.toLowerCase();
+        const stage = document.getElementById('wl-stage-filter').value;
+        const type = document.getElementById('wl-type-filter').value;
+        
+        const filtered = allWebsiteLeads.filter(l => {
+            const matchSearch = !search || `${l.name} ${l.email}`.toLowerCase().includes(search);
+            const matchStage = !stage || l.leadStage === stage;
+            const matchType = !type || l.leadType === type;
+            return matchSearch && matchStage && matchType;
+        });
+        renderWebsiteLeads(filtered);
+    }
+
+    function renderWebsiteLeads(leads) {
+        const container = document.getElementById('website-leads-grid');
+        if (!leads.length) {
+            container.innerHTML = '<div class="empty-state">No website leads found</div>';
+            return;
+        }
+        
+        container.innerHTML = leads.map(l => renderFullLeadCard(l, true, true)).join('');
+    }
+
+    async function submitWebsiteLeadUpdate() {
+        const id = document.getElementById('wl-update-id').value;
+        const body = {
+            leadType: document.getElementById('wl-type').value || null,
+            leadStage: document.getElementById('wl-stage').value || null,
+            assignedEmployeeId: document.getElementById('wl-employee').value ? encryptId(document.getElementById('wl-employee').value) : null,
+            nextFollowUpDate: document.getElementById('wl-followup-date').value || null,
+            nextFollowUp: document.getElementById('wl-followup-notes').value || null,
+            remarks: document.getElementById('wl-remarks').value || null
+        };
+        
+        try {
+            await api('PUT', `/api/admin/website-leads/${id}`, body);
+            toast('Website lead updated successfully!');
+            closeModal('website-lead-update-modal');
+            await loadWebsiteLeads();
+        } catch (err) {
+            toast(err.message, 'error');
         }
     }
 
@@ -2067,27 +2546,6 @@
         }
     }
 
-    async function submitWebsiteLeadUpdate() {
-        const id = document.getElementById('wl-update-id').value;
-        const body = {
-            leadType: document.getElementById('wl-type').value || null,
-            leadStage: document.getElementById('wl-stage').value || null,
-            assignedEmployeeId: document.getElementById('wl-employee').value || null,
-            nextFollowUpDate: document.getElementById('wl-followup-date').value || null,
-            nextFollowUp: document.getElementById('wl-followup-notes').value || null,
-            remarks: document.getElementById('wl-remarks').value || null
-        };
-        
-        try {
-            await api('PUT', `/api/admin/website-leads/${id}`, body);
-            toast('Website lead updated successfully!');
-            closeModal('website-lead-update-modal');
-            await loadWebsiteLeads();
-        } catch (err) {
-            toast(err.message, 'error');
-        }
-    }
-
     function switchTab(tabElement, tabId) {
         document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
         tabElement.classList.add('active');
@@ -2142,10 +2600,39 @@
             allBanners = pageData.content || [];
             currentBannerTotal = pageData.totalElements;
             renderBanners(allBanners);
-            renderPagination('banners-pagination', currentBannerPage, currentBannerTotal, currentBannerSize, loadBanners);
+            renderPaginationForBanners('banners-pagination', currentBannerPage, currentBannerTotal, currentBannerSize, loadBanners);
         } catch (err) {
             toast('Error loading banners: ' + err.message, 'error');
         }
+    }
+    
+    function renderPaginationForBanners(containerId, currentPage, totalElements, pageSize, callback) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        const totalPages = Math.ceil(totalElements / pageSize);
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        if (currentPage > 0) {
+            html += `<button onclick="loadBanners(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+        }
+        
+        const startPage = Math.max(0, currentPage - 2);
+        const endPage = Math.min(totalPages - 1, currentPage + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<button class="${i === currentPage ? 'active' : ''}" onclick="loadBanners(${i})">${i + 1}</button>`;
+        }
+        
+        if (currentPage < totalPages - 1) {
+            html += `<button onclick="loadBanners(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+        }
+        
+        container.innerHTML = html;
     }
 
     function filterBanners() {

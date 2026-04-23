@@ -27,4 +27,12 @@ public interface ContactService {
     void deactivateContact(Long id);
 
     long getTotalContactsCount();
+
+    ContactDTO createContact(ContactDTO contactDTO);
+
+    ContactDTO reactivateContact(Long id);
+
+    List<ContactDTO> getActiveContacts();
+
+    List<ContactDTO> getInactiveContacts();
 }
