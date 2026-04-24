@@ -1,9 +1,7 @@
 package com.crm.controller;
 
-import com.crm.dto.ApiResponse;
-import com.crm.dto.LeadResponseDTO;
-import com.crm.dto.WebsiteLeadDTO;
-import com.crm.dto.YouTubeVideoDTO;
+import com.crm.dto.*;
+import com.crm.service.PartnerInquiryService;
 import com.crm.service.WebsiteLeadService;
 import com.crm.service.YouTubeVideoService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +22,7 @@ public class WebsiteController {
 
     private final WebsiteLeadService websiteLeadService;
     private final YouTubeVideoService youTubeVideoService;
+    private final PartnerInquiryService partnerInquiryService;
 
     @PostMapping("/leads")
     public ResponseEntity<ApiResponse<LeadResponseDTO>> submitLead(
@@ -45,5 +44,20 @@ public class WebsiteController {
         log.info("Fetching active YouTube videos for website");
         List<YouTubeVideoDTO> videos = youTubeVideoService.getActiveVideosForWebsite();
         return ResponseEntity.ok(ApiResponse.success(videos, "YouTube videos retrieved successfully", request.getRequestURI()));
+    }
+
+
+
+    // Add these methods to WebsiteController
+    @PostMapping("/partner-inquiry")
+    public ResponseEntity<ApiResponse<PartnerInquiryResponseDTO>> submitPartnerInquiry(
+            @Valid @RequestBody PartnerInquiryDTO inquiryDTO,
+            HttpServletRequest request) {
+        log.info("New partner inquiry submission from: {}", inquiryDTO.getEmail());
+        PartnerInquiryResponseDTO inquiry = partnerInquiryService.submitInquiry(inquiryDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(inquiry,
+                        "Thank you for your interest in partnering with us! Our team will contact you soon.",
+                        request.getRequestURI()));
     }
 }

@@ -35,6 +35,7 @@ public class AdminController {
     private final LeadHistoryService leadHistoryService;
     private final WebsiteLeadService websiteLeadService;
     private final YouTubeVideoService youTubeVideoService;
+    private final PartnerInquiryService partnerInquiryService;
 
     // ==================== EMPLOYEE MANAGEMENT ====================
 
@@ -428,6 +429,96 @@ public class AdminController {
         log.info("Admin updating display order for YouTube video ID: {} to {}", id, displayOrder);
         YouTubeVideoDTO video = youTubeVideoService.updateVideoOrder(id, displayOrder);
         return ResponseEntity.ok(ApiResponse.success(video, "YouTube video order updated successfully", request.getRequestURI()));
+    }
+
+
+
+
+
+
+//    ====================== partner inquries ==================================
+
+    @GetMapping("/partner-inquiries")
+    public ResponseEntity<ApiResponse<Page<PartnerInquiryResponseDTO>>> getAllPartnerInquiries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletRequest request) {
+
+        log.info("Admin fetching all partner inquiries - page: {}, size: {}", page, size);
+
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<PartnerInquiryResponseDTO> inquiries = partnerInquiryService.getAllInquiries(pageable);
+        return ResponseEntity.ok(ApiResponse.success(inquiries, "Partner inquiries retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/partner-inquiries/search")
+    public ResponseEntity<ApiResponse<Page<PartnerInquiryResponseDTO>>> searchPartnerInquiries(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) Boolean isProcessed,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletRequest request) {
+
+        log.info("Searching partner inquiries - name: {}, email: {}, phone: {}, processed: {}",
+                name, email, phone, isProcessed);
+
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<PartnerInquiryResponseDTO> inquiries = partnerInquiryService.searchInquiries(name, email, phone, isProcessed, pageable);
+        return ResponseEntity.ok(ApiResponse.success(inquiries, "Partner inquiries search completed", request.getRequestURI()));
+    }
+
+    @GetMapping("/partner-inquiries/{id}")
+    public ResponseEntity<ApiResponse<PartnerInquiryResponseDTO>> getPartnerInquiryById(
+            @PathVariable String id,
+            HttpServletRequest request) {
+
+        Long decryptedId = CryptoUtil.decryptToLong(id);
+        log.info("Admin fetching partner inquiry with ID: {}", decryptedId);
+
+        PartnerInquiryResponseDTO inquiry = partnerInquiryService.getInquiryById(decryptedId);
+        return ResponseEntity.ok(ApiResponse.success(inquiry, "Partner inquiry retrieved successfully", request.getRequestURI()));
+    }
+
+    @PatchMapping("/partner-inquiries/{id}/status")
+    public ResponseEntity<ApiResponse<PartnerInquiryResponseDTO>> updatePartnerInquiryStatus(
+            @PathVariable String id,
+            @RequestBody PartnerInquiryUpdateDTO updateDTO,
+            HttpServletRequest request) {
+
+        Long decryptedId = CryptoUtil.decryptToLong(id);
+        log.info("Admin updating partner inquiry status for ID: {} to processed: {}", decryptedId, updateDTO.getIsProcessed());
+
+        PartnerInquiryResponseDTO inquiry = partnerInquiryService.updateInquiryStatus(decryptedId, updateDTO);
+        return ResponseEntity.ok(ApiResponse.success(inquiry, "Partner inquiry status updated successfully", request.getRequestURI()));
+    }
+
+    @DeleteMapping("/partner-inquiries/{id}")
+    public ResponseEntity<ApiResponse<Void>> deletePartnerInquiry(
+            @PathVariable String id,
+            HttpServletRequest request) {
+
+        Long decryptedId = CryptoUtil.decryptToLong(id);
+        log.info("Admin deleting partner inquiry with ID: {}", decryptedId);
+
+        partnerInquiryService.deleteInquiry(decryptedId);
+        return ResponseEntity.ok(ApiResponse.success("Partner inquiry deleted successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/partner-inquiries/statistics/unprocessed-count")
+    public ResponseEntity<ApiResponse<Long>> getUnprocessedInquiriesCount(HttpServletRequest request) {
+        log.info("Admin fetching unprocessed partner inquiries count");
+        long count = partnerInquiryService.getUnprocessedCount();
+        return ResponseEntity.ok(ApiResponse.success(count, "Unprocessed inquiries count retrieved successfully", request.getRequestURI()));
     }
 }
 

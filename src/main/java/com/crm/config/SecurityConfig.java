@@ -45,7 +45,8 @@ public class SecurityConfig {
                                 "/api/chatbot/**",
                                 "/api/images/**",
                                 "/api/website/banners/**",
-                                "/api/website/youtube-videos/**"
+                                "/api/website/youtube-videos/**",
+                                "/api/website/partner-inquiry"
                         ).permitAll()
 
                         // Static resources

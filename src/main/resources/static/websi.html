@@ -1009,9 +1009,93 @@
             }
         }
     </style>
+    
+    <style>
+        .partner-modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            margin: 20px;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.open .partner-modal-content {
+            transform: scale(1);
+        }
+        
+        .partner-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .partner-modal-header h3 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .partner-modal-header h3 i {
+            color: var(--accent);
+            margin-right: 10px;
+        }
+        
+        .partner-modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+    </style>
+
 </head>
 <body>
 <div class="toast-container" id="toast-container"></div>
+
+
+<!-- Partner With Us Modal -->
+<div class="modal-overlay" id="partner-modal">
+    <div class="partner-modal-content">
+        <div class="partner-modal-header">
+            <h3><i class="fas fa-handshake"></i> Partner With Us</h3>
+            <button class="close-modal-btn" onclick="closePartnerModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="partner-modal-body">
+            <p style="color: var(--text2); margin-bottom: 20px; text-align: center;">
+                Join hands with Samriddhi Financial Services and grow your business.
+                Fill out the form below and our partnership team will reach out to you.
+            </p>
+            
+            <form id="partner-form" onsubmit="submitPartnerInquiry(event)">
+                <div class="form-group">
+                    <label class="form-label">Full Name <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="partner-name" required placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email Address <span class="required">*</span></label>
+                    <input type="email" class="form-control" id="partner-email" required placeholder="you@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Phone Number <span class="required">*</span></label>
+                    <input type="tel" class="form-control" id="partner-phone" maxlength="10" required placeholder="10-digit mobile number">
+                </div>
+                
+                <button type="submit" class="btn-submit" id="partner-submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit Partnership Inquiry
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <!-- Success Modal -->
 <div class="modal-overlay" id="success-modal">
@@ -1049,6 +1133,10 @@
             <a href="#" onclick="scrollToSection('videos')">Videos</a>
             <a href="#" onclick="scrollToSection('services')">Services</a>
             <a href="#" onclick="scrollToSection('contact')">Contact</a>
+            <!-- ADD THIS LINE -->
+            <a href="#" onclick="openPartnerModal()" style="background: linear-gradient(135deg, #6c63ff, #ff6584); padding: 8px 20px; border-radius: 25px; color: white;">
+                <i class="fas fa-handshake"></i> Partner With Us
+            </a>
         </div>
     </div>
 </nav>
@@ -1535,15 +1623,30 @@
         }, 4000);
     }
 
-    function closeSuccessModal() {
-        document.getElementById('success-modal').classList.remove('open');
-        document.getElementById('lead-form').reset();
-        document.getElementById('subcategory').innerHTML = '<option value="">Select main service first</option>';
-        document.getElementById('subcategory').disabled = true;
-        document.getElementById('subsubcategory').innerHTML = '<option value="">Select subcategory first</option>';
-        document.getElementById('subsubcategory').disabled = true;
-        document.getElementById('service-preview').style.display = 'none';
+   function closeSuccessModal() {
+    const modal = document.getElementById('success-modal');
+    modal.classList.remove('open');
+    
+    // Only reset the lead form if it's not a partner submission
+    const leadForm = document.getElementById('lead-form');
+    if (leadForm && !document.getElementById('partner-form')?.submitter) {
+        leadForm.reset();
+        const subcatSelect = document.getElementById('subcategory');
+        const subsubSelect = document.getElementById('subsubcategory');
+        if (subcatSelect) {
+            subcatSelect.innerHTML = '<option value="">Select main service first</option>';
+            subcatSelect.disabled = true;
+        }
+        if (subsubSelect) {
+            subsubSelect.innerHTML = '<option value="">Select subcategory first</option>';
+            subsubSelect.disabled = true;
+        }
+        const previewDiv = document.getElementById('service-preview');
+        if (previewDiv) previewDiv.style.display = 'none';
     }
+    
+    document.body.style.overflow = 'auto';
+}
 
     function validatePhone(phone) {
         const phoneRegex = /^[0-9]{10}$/;
@@ -1843,5 +1946,134 @@
         }
     }, 500);
 </script>
+
+<script>
+    // Partner Modal Functions
+function openPartnerModal() {
+    const modal = document.getElementById('partner-modal');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+
+// Add this to your existing modal click handlers
+const partnerModal = document.getElementById('partner-modal');
+if (partnerModal) {
+    partnerModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePartnerModal();
+        }
+    });
+}
+
+function closePartnerModal() {
+    const modal = document.getElementById('partner-modal');
+    modal.classList.remove('open');
+    document.body.style.overflow = 'auto';
+    document.getElementById('partner-form').reset();
+}
+
+async function submitPartnerInquiry(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('partner-name').value.trim();
+    const email = document.getElementById('partner-email').value.trim();
+    const phone = document.getElementById('partner-phone').value.trim();
+    
+    // Validation
+    if (!name) {
+        toast('Please enter your full name', 'error');
+        return;
+    }
+    
+    if (name.length < 2) {
+        toast('Please enter a valid name', 'error');
+        return;
+    }
+    
+    if (!validateEmail(email)) {
+        toast('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    if (!validatePhone(phone)) {
+        toast('Please enter a valid 10-digit phone number', 'error');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('partner-submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading"></span> Submitting...';
+    submitBtn.disabled = true;
+    
+    const partnerData = {
+        name: name,
+        email: email,
+        phoneNumber: phone
+    };
+    
+    try {
+        const response = await fetch('/api/website/partner-inquiry', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(partnerData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            closePartnerModal();
+            toast('Thank you for your interest! Our partnership team will contact you soon.', 'success');
+            
+            // Show success modal with custom message
+            const successModal = document.getElementById('success-modal');
+            const successTitle = document.querySelector('#success-modal h3');
+            const successText = document.querySelector('#success-modal p');
+            const originalTitle = successTitle.textContent;
+            const originalTextContent = successText.textContent;
+            
+            successTitle.textContent = 'Partnership Request Received!';
+            successText.textContent = 'Thank you for your interest in partnering with Samriddhi Financial Services. Our team will contact you within 48 hours.';
+            successModal.classList.add('open');
+            
+            // Reset after modal closes
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (!successModal.classList.contains('open')) {
+                        successTitle.textContent = originalTitle;
+                        successText.textContent = originalTextContent;
+                        observer.disconnect();
+                    }
+                });
+            });
+            observer.observe(successModal, { attributes: true });
+            
+        } else {
+            throw new Error(data.message || 'Submission failed');
+        }
+    } catch (err) {
+        console.error('Error submitting partner inquiry:', err);
+        toast(err.message || 'Something went wrong. Please try again.', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Make sure validateEmail and validatePhone functions exist
+// If not, add them (they should already exist from your existing code)
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validatePhone(phone) {
+    const phoneRegex = /^[0-9]{10}$/;
+    return phoneRegex.test(phone);
+}
+</script>
+
 </body>
 </html>
