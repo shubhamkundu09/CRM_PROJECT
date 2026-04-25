@@ -287,6 +287,9 @@
             <div class="nav-item" onclick="navActivate('section-followups'); loadFollowUps()"><i class="fas fa-calendar-check"></i> Follow-ups</div>
             <div class="nav-item" onclick="navActivate('section-lead-stats'); loadLeadStatistics()"><i class="fas fa-chart-line"></i> Analytics</div>
             <div class="nav-item" onclick="navActivate('section-banners'); loadBanners()"><i class="fas fa-images"></i> Banner Management</div>
+            <div class="nav-item" onclick="navActivate('section-partner-banners'); loadPartnerBanners()">
+                <i class="fas fa-handshake"></i> Partner Banners
+            </div>
             <div class="nav-item" onclick="navActivate('section-youtube'); loadYouTubeVideos()"><i class="fab fa-youtube"></i> YouTube Videos</div>
             <div class="nav-item" onclick="navActivate('section-partner-inquiries'); loadPartnerInquiries()">
                 <i class="fas fa-handshake"></i> Partner Inquiries
@@ -567,6 +570,37 @@
                 <div class="card-body">
                     <div id="banners-grid" class="leads-grid"></div>
                     <div class="pagination" id="banners-pagination"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PARTNER BANNER MANAGEMENT -->
+        <div id="section-partner-banners" class="section">
+            <div class="topbar">
+                <div>
+                    <div class="page-title"><i class="fas fa-handshake" style="color: var(--accent);"></i> Partner Banners</div>
+                    <div class="page-sub">Manage partner banners/logos displayed on the website</div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openCreatePartnerBanner()">
+                    <i class="fas fa-plus"></i> Add Partner Banner
+                </button>
+            </div>
+            <div class="filter-bar">
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" id="partner-banner-search" placeholder="Search partner banners by title..." oninput="filterPartnerBanners()">
+                </div>
+                <select class="select-filter" id="partner-banner-status-filter" onchange="filterPartnerBanners()">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="loadPartnerBanners()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div id="partner-banners-grid" class="leads-grid"></div>
+                    <div class="pagination" id="partner-banners-pagination"></div>
                 </div>
             </div>
         </div>
@@ -981,6 +1015,53 @@
     </div>
 </div>
 
+
+<!-- Partner Banner Modal -->
+<div class="modal-overlay" id="partner-banner-modal">
+    <div class="modal modal-md">
+        <div class="modal-header">
+            <div class="modal-title" id="partner-banner-modal-title">Add Partner Banner</div>
+            <button class="modal-close" onclick="closeModal('partner-banner-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="partner-banner-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">Partner Logo/Image *</label>
+                    <input type="file" class="form-control" id="partner-banner-image-file" accept="image/jpeg,image/png,image/jpg,image/webp" style="padding: 8px;">
+                    <div class="page-sub" style="margin-top: 6px; font-size: 10px;">Supported formats: JPG, PNG, WEBP. Max size: 5MB</div>
+                    <div id="current-partner-image-preview" style="display: none; margin-top: 10px;">
+                        <img id="partner-image-preview" src="" alt="Current Partner Banner" style="max-width: 100%; max-height: 150px; border-radius: var(--radius-sm);">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Partner Name / Title *</label>
+                    <input type="text" class="form-control" id="partner-banner-title" required placeholder="Enter partner name or title...">
+                </div>
+                <input type="hidden" id="partner-banner-id">
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('partner-banner-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="handlePartnerBannerSubmit()">
+                <i class="fas fa-save"></i> Save Partner Banner
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Partner Banner Detail Modal -->
+<div class="modal-overlay" id="partner-banner-detail-modal">
+    <div class="modal modal-md">
+        <div class="modal-header">
+            <div class="modal-title">Partner Banner Details</div>
+            <button class="modal-close" onclick="closeModal('partner-banner-detail-modal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="partner-banner-detail-content"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('partner-banner-detail-modal')">Close</button>
+        </div>
+    </div>
+</div>
 <!-- YouTube Video Modal -->
 <div class="modal-overlay" id="youtube-modal">
     <div class="modal modal-md">
@@ -3064,6 +3145,254 @@ async function deletePartnerInquiry(id) {
         loadPartnerInquiries(currentPartnerPage);
     } catch (err) {
         toast('Error deleting inquiry: ' + err.message, 'error');
+    }
+}
+</script>
+
+
+<script>
+    // ============================================================
+// PARTNER BANNER MANAGEMENT
+// ============================================================
+
+let allPartnerBanners = [];
+let currentPartnerBannerPage = 0;
+let currentPartnerBannerSize = 12;
+let currentPartnerBannerTotal = 0;
+
+async function loadPartnerBanners(page = 0) {
+    currentPartnerBannerPage = page;
+    try {
+        const res = await api('GET', `/api/admin/partner-banners?page=${page}&size=${currentPartnerBannerSize}&sortBy=createdAt&sortDir=desc`);
+        const pageData = res.data;
+        allPartnerBanners = pageData.content || [];
+        currentPartnerBannerTotal = pageData.totalElements;
+        renderPartnerBanners(allPartnerBanners);
+        renderPaginationForPartnerBanners();
+    } catch (err) {
+        toast('Error loading partner banners: ' + err.message, 'error');
+    }
+}
+
+function renderPaginationForPartnerBanners() {
+    const container = document.getElementById('partner-banners-pagination');
+    if (!container) return;
+    
+    const totalPages = Math.ceil(currentPartnerBannerTotal / currentPartnerBannerSize);
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    if (currentPartnerBannerPage > 0) {
+        html += `<button onclick="loadPartnerBanners(${currentPartnerBannerPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    }
+    
+    const startPage = Math.max(0, currentPartnerBannerPage - 2);
+    const endPage = Math.min(totalPages - 1, currentPartnerBannerPage + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="${i === currentPartnerBannerPage ? 'active' : ''}" onclick="loadPartnerBanners(${i})">${i + 1}</button>`;
+    }
+    
+    if (currentPartnerBannerPage < totalPages - 1) {
+        html += `<button onclick="loadPartnerBanners(${currentPartnerBannerPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    }
+    
+    container.innerHTML = html;
+}
+
+function filterPartnerBanners() {
+    const search = document.getElementById('partner-banner-search').value.toLowerCase();
+    const status = document.getElementById('partner-banner-status-filter').value;
+    
+    let filtered = allPartnerBanners;
+    if (search) {
+        filtered = filtered.filter(b => b.title.toLowerCase().includes(search));
+    }
+    if (status) {
+        filtered = filtered.filter(b => status === 'active' ? b.isActive : !b.isActive);
+    }
+    renderPartnerBanners(filtered);
+}
+
+function renderPartnerBanners(banners) {
+    const container = document.getElementById('partner-banners-grid');
+    if (!banners || banners.length === 0) {
+        container.innerHTML = '<div class="empty-state">No partner banners found. Click "Add Partner Banner" to create one.</div>';
+        return;
+    }
+    
+    container.innerHTML = banners.map(banner => `
+        <div class="lead-card" onclick="viewPartnerBannerDetail(${banner.id})">
+            <div class="lead-card-header">
+                <span class="lead-card-name">${escapeHtml(banner.title)}</span>
+                <span class="badge ${banner.isActive ? 'badge-active' : 'badge-inactive'}">
+                    ${banner.isActive ? 'Active' : 'Inactive'}
+                </span>
+            </div>
+            <img src="${banner.imageUrl}" alt="Partner Logo" style="width: 100%; height: 150px; object-fit: contain; background: white; border-radius: var(--radius-sm); margin-bottom: 12px; padding: 10px;" onerror="this.src='https://via.placeholder.com/400x150?text=No+Image'">
+            <div class="lead-card-detail">
+                <i class="fas fa-building"></i> ${escapeHtml(banner.title)}
+            </div>
+            <div class="lead-card-footer">
+                <span><i class="fas fa-calendar"></i> ${formatDate(banner.createdAt)}</span>
+            </div>
+            <div class="lead-actions" onclick="event.stopPropagation()">
+                <button class="btn btn-outline btn-xs" onclick="viewPartnerBannerDetail(${banner.id})"><i class="fas fa-eye"></i> View</button>
+                <button class="btn btn-primary btn-xs" onclick="openEditPartnerBanner(${banner.id})"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn btn-warning btn-xs" onclick="togglePartnerBannerStatus(${banner.id})">
+                    <i class="fas ${banner.isActive ? 'fa-ban' : 'fa-play'}"></i> ${banner.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+                <button class="btn btn-danger btn-xs" onclick="deletePartnerBanner(${banner.id})"><i class="fas fa-trash-alt"></i> Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openCreatePartnerBanner() {
+    document.getElementById('partner-banner-modal-title').textContent = 'Add Partner Banner';
+    document.getElementById('partner-banner-form').reset();
+    document.getElementById('partner-banner-id').value = '';
+    document.getElementById('current-partner-image-preview').style.display = 'none';
+    document.getElementById('partner-banner-image-file').required = true;
+    openModal('partner-banner-modal');
+}
+
+async function openEditPartnerBanner(id) {
+    try {
+        const res = await api('GET', `/api/admin/partner-banners/${id}`);
+        const banner = res.data;
+        
+        document.getElementById('partner-banner-modal-title').textContent = 'Edit Partner Banner';
+        document.getElementById('partner-banner-id').value = banner.id;
+        document.getElementById('partner-banner-title').value = banner.title;
+        document.getElementById('partner-banner-image-file').required = false;
+        
+        if (banner.imageUrl) {
+            const preview = document.getElementById('partner-image-preview');
+            preview.src = banner.imageUrl;
+            document.getElementById('current-partner-image-preview').style.display = 'block';
+        } else {
+            document.getElementById('current-partner-image-preview').style.display = 'none';
+        }
+        
+        openModal('partner-banner-modal');
+    } catch (err) {
+        toast('Error loading partner banner: ' + err.message, 'error');
+    }
+}
+
+async function handlePartnerBannerSubmit() {
+    const id = document.getElementById('partner-banner-id').value;
+    const title = document.getElementById('partner-banner-title').value;
+    const imageFile = document.getElementById('partner-banner-image-file').files[0];
+    
+    if (!title) {
+        toast('Please enter partner name/title', 'error');
+        return;
+    }
+    
+    if (!id && !imageFile) {
+        toast('Please select an image for the partner banner', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('title', title);
+    if (imageFile) {
+        formData.append('image', imageFile);
+    }
+    
+    try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        let url, method;
+        if (id) {
+            url = `/api/admin/partner-banners/${id}`;
+            method = 'PUT';
+        } else {
+            url = '/api/admin/partner-banners';
+            method = 'POST';
+        }
+        
+        const res = await fetch(BASE + url, {
+            method: method,
+            headers: headers,
+            body: formData
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.message || data.error || 'Failed to save partner banner');
+        }
+        
+        toast(id ? 'Partner banner updated successfully!' : 'Partner banner created successfully!');
+        closeModal('partner-banner-modal');
+        await loadPartnerBanners(currentPartnerBannerPage);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function togglePartnerBannerStatus(id) {
+    try {
+        await api('PATCH', `/api/admin/partner-banners/${id}/toggle-status`);
+        toast('Partner banner status updated successfully');
+        await loadPartnerBanners(currentPartnerBannerPage);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function deletePartnerBanner(id) {
+    if (!confirm('⚠️ PERMANENT DELETE: This will completely remove the partner banner. Cannot undo! Continue?')) return;
+    try {
+        await api('DELETE', `/api/admin/partner-banners/${id}`);
+        toast('Partner banner permanently deleted');
+        await loadPartnerBanners(currentPartnerBannerPage);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function viewPartnerBannerDetail(id) {
+    const content = document.getElementById('partner-banner-detail-content');
+    content.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading...</div>';
+    openModal('partner-banner-detail-modal');
+    
+    try {
+        const res = await api('GET', `/api/admin/partner-banners/${id}`);
+        const banner = res.data;
+        
+        content.innerHTML = `
+            <div class="info-grid">
+                <div class="info-item col-span-2">
+                    <div class="info-label">Partner Logo</div>
+                    <img src="${banner.imageUrl}" alt="Partner Logo" style="width: 100%; max-height: 200px; object-fit: contain; background: white; border-radius: var(--radius-sm); padding: 15px;" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                </div>
+                <div class="info-item col-span-2">
+                    <div class="info-label">Partner Name / Title</div>
+                    <div class="info-value">${escapeHtml(banner.title)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value"><span class="badge ${banner.isActive ? 'badge-active' : 'badge-inactive'}">${banner.isActive ? 'Active' : 'Inactive'}</span></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Created At</div>
+                    <div class="info-value">${formatDateTime(banner.createdAt)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Updated</div>
+                    <div class="info-value">${formatDateTime(banner.updatedAt)}</div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        content.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
     }
 }
 </script>

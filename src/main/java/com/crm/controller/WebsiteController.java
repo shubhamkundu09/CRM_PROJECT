@@ -1,6 +1,7 @@
 package com.crm.controller;
 
 import com.crm.dto.*;
+import com.crm.service.PartnerBannerService;
 import com.crm.service.PartnerInquiryService;
 import com.crm.service.WebsiteLeadService;
 import com.crm.service.YouTubeVideoService;
@@ -23,6 +24,7 @@ public class WebsiteController {
     private final WebsiteLeadService websiteLeadService;
     private final YouTubeVideoService youTubeVideoService;
     private final PartnerInquiryService partnerInquiryService;
+    private final PartnerBannerService partnerBannerService;  // Add this
 
     @PostMapping("/leads")
     public ResponseEntity<ApiResponse<LeadResponseDTO>> submitLead(
@@ -36,7 +38,6 @@ public class WebsiteController {
                         request.getRequestURI()));
     }
 
-
     // ==================== YOUTUBE VIDEOS FOR WEBSITE ====================
 
     @GetMapping("/youtube-videos")
@@ -46,9 +47,8 @@ public class WebsiteController {
         return ResponseEntity.ok(ApiResponse.success(videos, "YouTube videos retrieved successfully", request.getRequestURI()));
     }
 
+    // ==================== PARTNER INQUIRY FOR WEBSITE ====================
 
-
-    // Add these methods to WebsiteController
     @PostMapping("/partner-inquiry")
     public ResponseEntity<ApiResponse<PartnerInquiryResponseDTO>> submitPartnerInquiry(
             @Valid @RequestBody PartnerInquiryDTO inquiryDTO,
@@ -59,5 +59,14 @@ public class WebsiteController {
                 .body(ApiResponse.success(inquiry,
                         "Thank you for your interest in partnering with us! Our team will contact you soon.",
                         request.getRequestURI()));
+    }
+
+    // ==================== PARTNER BANNERS FOR WEBSITE ====================
+
+    @GetMapping("/partner-banners")
+    public ResponseEntity<ApiResponse<List<PartnerBannerDTO>>> getActivePartnerBanners(HttpServletRequest request) {
+        log.info("Fetching active partner banners for website");
+        List<PartnerBannerDTO> banners = partnerBannerService.getActivePartnerBannersForWebsite();
+        return ResponseEntity.ok(ApiResponse.success(banners, "Partner banners retrieved successfully", request.getRequestURI()));
     }
 }

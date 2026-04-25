@@ -1052,6 +1052,49 @@
         }
     </style>
 
+    
+    <style>
+        /* Partner Banners Grid */
+.partner-banners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.partner-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    padding: 20px;
+    text-align: center;
+}
+
+.partner-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+}
+
+.partner-logo {
+    width: 100%;
+    height: 120px;
+    object-fit: contain;
+    background: white;
+    border-radius: var(--radius-sm);
+    margin-bottom: 15px;
+    padding: 15px;
+}
+
+.partner-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 10px;
+}
+    </style>
 </head>
 <body>
 <div class="toast-container" id="toast-container"></div>
@@ -1158,6 +1201,21 @@
         <div class="banners-loading">
             <div class="spinner"></div>
             <p>Loading banners...</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- Partner Banners Section -->
+<section class="banners-section" id="partner-banners">
+    <div class="section-header">
+        <h2><i class="fas fa-handshake"></i> Our Trusted Partners</h2>
+        <p style="color: var(--text2);">We are proud to partner with these industry leaders</p>
+    </div>
+    <div class="partner-banners-grid" id="partner-banners-grid">
+        <div class="banners-loading">
+            <div class="spinner"></div>
+            <p>Loading partners...</p>
         </div>
     </div>
 </section>
@@ -1311,6 +1369,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadBanners();
         loadYouTubeVideos();
+        loadPartnerBanners();
     });
 
     // Function to load banners from API
@@ -2075,5 +2134,58 @@ function validatePhone(phone) {
 }
 </script>
 
+
+<script>
+    // Function to load partner banners from API
+async function loadPartnerBanners() {
+    const partnerGrid = document.getElementById('partner-banners-grid');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/website/partner-banners`);
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.length > 0) {
+            displayPartnerBanners(data.data);
+        } else {
+            partnerGrid.innerHTML = `
+                <div class="no-banners" style="grid-column: span 4;">
+                    <i class="fas fa-handshake fa-3x"></i>
+                    <p>Partner banners coming soon!</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading partner banners:', error);
+        partnerGrid.innerHTML = `
+            <div class="no-banners" style="grid-column: span 4;">
+                <i class="fas fa-image fa-3x"></i>
+                <p>Unable to load partners. Please try again later.</p>
+            </div>
+        `;
+    }
+}
+
+// Function to display partner banners
+function displayPartnerBanners(banners) {
+    const partnerGrid = document.getElementById('partner-banners-grid');
+    
+    if (!banners || banners.length === 0) {
+        partnerGrid.innerHTML = `
+            <div class="no-banners" style="grid-column: span 4;">
+                <i class="fas fa-handshake fa-3x"></i>
+                <p>Partner banners coming soon!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    partnerGrid.innerHTML = banners.map(banner => `
+        <div class="partner-card">
+            <img src="${banner.imageUrl}" alt="${escapeHtml(banner.title)}" class="partner-logo" onerror="this.src='https://via.placeholder.com/200x120?text=Partner'">
+            <div class="partner-name">${escapeHtml(banner.title)}</div>
+        </div>
+    `).join('');
+}
+</script>
 </body>
 </html>

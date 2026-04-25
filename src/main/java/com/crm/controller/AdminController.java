@@ -36,6 +36,7 @@ public class AdminController {
     private final WebsiteLeadService websiteLeadService;
     private final YouTubeVideoService youTubeVideoService;
     private final PartnerInquiryService partnerInquiryService;
+    private final PartnerBannerService partnerBannerService;
 
     // ==================== EMPLOYEE MANAGEMENT ====================
 
@@ -519,6 +520,84 @@ public class AdminController {
         log.info("Admin fetching unprocessed partner inquiries count");
         long count = partnerInquiryService.getUnprocessedCount();
         return ResponseEntity.ok(ApiResponse.success(count, "Unprocessed inquiries count retrieved successfully", request.getRequestURI()));
+    }
+
+
+
+
+
+
+//    ========================= PARTNER BANNER IMAGES ===========================
+
+
+
+    @PostMapping("/partner-banners")
+    public ResponseEntity<ApiResponse<PartnerBannerDTO>> createPartnerBanner(
+            @Valid @ModelAttribute PartnerBannerCreateDTO createDTO,
+            HttpServletRequest request) {
+        log.info("Admin creating new partner banner with title: {}", createDTO.getTitle());
+        PartnerBannerDTO createdBanner = partnerBannerService.createPartnerBanner(createDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(createdBanner, "Partner banner created successfully", request.getRequestURI()));
+    }
+
+    @PutMapping("/partner-banners/{id}")
+    public ResponseEntity<ApiResponse<PartnerBannerDTO>> updatePartnerBanner(
+            @PathVariable Long id,
+            @Valid @ModelAttribute PartnerBannerUpdateDTO updateDTO,
+            HttpServletRequest request) {
+        updateDTO.setId(id);
+        log.info("Admin updating partner banner with ID: {}", id);
+        PartnerBannerDTO updatedBanner = partnerBannerService.updatePartnerBanner(updateDTO);
+        return ResponseEntity.ok(ApiResponse.success(updatedBanner, "Partner banner updated successfully", request.getRequestURI()));
+    }
+
+    @DeleteMapping("/partner-banners/{id}")
+    public ResponseEntity<ApiResponse<Void>> deletePartnerBanner(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        log.info("Admin deleting partner banner with ID: {}", id);
+        partnerBannerService.deletePartnerBanner(id);
+        return ResponseEntity.ok(ApiResponse.success("Partner banner deleted successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/partner-banners/{id}")
+    public ResponseEntity<ApiResponse<PartnerBannerDTO>> getPartnerBannerById(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        log.info("Admin fetching partner banner with ID: {}", id);
+        PartnerBannerDTO banner = partnerBannerService.getPartnerBannerById(id);
+        return ResponseEntity.ok(ApiResponse.success(banner, "Partner banner retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/partner-banners")
+    public ResponseEntity<ApiResponse<Page<PartnerBannerDTO>>> getAllPartnerBanners(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletRequest request) {
+        log.info("Admin fetching all partner banners - page: {}, size: {}", page, size);
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<PartnerBannerDTO> banners = partnerBannerService.getAllPartnerBanners(pageable);
+        return ResponseEntity.ok(ApiResponse.success(banners, "Partner banners retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/partner-banners/all")
+    public ResponseEntity<ApiResponse<List<PartnerBannerDTO>>> getAllPartnerBannersList(HttpServletRequest request) {
+        log.info("Admin fetching all partner banners as list");
+        List<PartnerBannerDTO> banners = partnerBannerService.getAllPartnerBannersList();
+        return ResponseEntity.ok(ApiResponse.success(banners, "Partner banners retrieved successfully", request.getRequestURI()));
+    }
+
+    @PatchMapping("/partner-banners/{id}/toggle-status")
+    public ResponseEntity<ApiResponse<PartnerBannerDTO>> togglePartnerBannerStatus(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        log.info("Admin toggling status for partner banner with ID: {}", id);
+        PartnerBannerDTO banner = partnerBannerService.togglePartnerBannerStatus(id);
+        return ResponseEntity.ok(ApiResponse.success(banner, "Partner banner status updated successfully", request.getRequestURI()));
     }
 }
 

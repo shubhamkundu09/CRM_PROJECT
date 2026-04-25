@@ -104,4 +104,32 @@ public class FileStorageService {
         }
         return fileName.substring(fileName.lastIndexOf("."));
     }
+
+    public String storePartnerBannerImage(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IOException("File is empty");
+        }
+
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IOException("File size exceeds maximum allowed size of 5MB");
+        }
+
+        // Validate file type
+        String originalFileName = file.getOriginalFilename();
+        String extension = getFileExtension(originalFileName);
+        if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+            throw new IOException("Invalid file type. Allowed types: JPG, JPEG, PNG, GIF, WEBP");
+        }
+
+        // Generate unique filename
+        String fileName = "partner_" + dateFormat.format(new Date()) + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
+
+        // Store file
+        Path targetLocation = this.fileStorageLocation.resolve(fileName);
+        Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+        log.info("Partner banner file stored successfully: {}", fileName);
+        return fileName;
+    }
 }

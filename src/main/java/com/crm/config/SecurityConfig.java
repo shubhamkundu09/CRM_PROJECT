@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/api/images/**",
                                 "/api/website/banners/**",
                                 "/api/website/youtube-videos/**",
-                                "/api/website/partner-inquiry"
+                                "/api/website/partner-inquiry",
+                                "/api/website/partner-banners/**"
                         ).permitAll()
 
                         // Static resources

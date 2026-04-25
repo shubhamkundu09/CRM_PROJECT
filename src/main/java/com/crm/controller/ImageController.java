@@ -39,4 +39,17 @@ public class ImageController {
             default -> MediaType.APPLICATION_OCTET_STREAM;
         };
     }
+
+    // Add this method to ImageController
+    @GetMapping("/partner-banners/{fileName}")
+    public ResponseEntity<byte[]> getPartnerBannerImage(@PathVariable String fileName) {
+        try {
+            byte[] imageData = fileStorageService.loadFile(fileName);
+            MediaType mediaType = getMediaType(fileName);
+            return ResponseEntity.ok().contentType(mediaType).body(imageData);
+        } catch (IOException e) {
+            log.error("Failed to load partner banner image: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
