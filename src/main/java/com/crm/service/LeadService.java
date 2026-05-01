@@ -20,6 +20,9 @@ public interface LeadService {
 
     Map<String, Long> getLeadStatistics();
 
+    // Add to LeadService.java
+    LeadResponseDTO reassignLead(Long leadId, Long employeeId, String remarks);
+
     LeadResponseDTO updateLeadStatistics(Long id, LeadStatisticsUpdateDTO statisticsDTO);
 
     Page<LeadResponseDTO> searchLeads(

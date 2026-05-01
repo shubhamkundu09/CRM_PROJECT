@@ -1576,50 +1576,56 @@
     
     let currentReassignLeadId = null;
     
-    async function openReassignLeadModal(leadId) {
-        currentReassignLeadId = leadId;
+ async function openReassignLeadModal(leadId) {
+    currentReassignLeadId = leadId;
+    
+    try {
+        const res = await api('GET', '/api/admin/employees/active');
+        const activeEmployees = res.data || [];
         
-        try {
-            const res = await api('GET', '/api/admin/employees/active');
-            const activeEmployees = res.data || [];
+        const content = `
+            <div class="form-group">
+                <label class="form-label">Select Employee to Assign</label>
+                <select class="form-control" id="reassign-employee-select">
+                    <option value="">Select Employee</option>
+                    ${activeEmployees.map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)} (${escapeHtml(e.department || 'N/A')})</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Remarks (Optional)</label>
+                <textarea class="form-control" id="reassign-remarks" rows="2" placeholder="Add any remarks about this reassignment..."></textarea>
+            </div>
+        `;
+        
+        showCustomModal('Reassign Lead', content, async () => {
+            const employeeId = document.getElementById('reassign-employee-select').value;
+            if (!employeeId) {
+                toast('Please select an employee', 'error');
+                return false;
+            }
             
-            const content = `
-                <div class="form-group">
-                    <label class="form-label">Select Employee to Assign</label>
-                    <select class="form-control" id="reassign-employee-select">
-                        <option value="">Select Employee</option>
-                        ${activeEmployees.map(e => `<option value="${e.id}">${escapeHtml(e.firstName)} ${escapeHtml(e.lastName)} (${escapeHtml(e.department || 'N/A')})</option>`).join('')}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Remarks (Optional)</label>
-                    <textarea class="form-control" id="reassign-remarks" rows="2" placeholder="Add any remarks about this reassignment..."></textarea>
-                </div>
-            `;
+            const remarks = document.getElementById('reassign-remarks').value;
+            // DON'T encrypt the employeeId - use it as is
+            const url = `/api/admin/leads/${leadId}/assign?employeeId=${employeeId}${remarks ? '&remarks=' + encodeURIComponent(remarks) : ''}`;
             
-            showCustomModal('Reassign Lead', content, async () => {
-                const employeeId = document.getElementById('reassign-employee-select').value;
-                if (!employeeId) {
-                    toast('Please select an employee', 'error');
-                    return false;
-                }
-                
-                try {
-                    await api('PUT', `/api/admin/leads/${currentReassignLeadId}`, {
-                        assignedEmployeeId: encryptId(employeeId)
-                    });
-                    toast('Lead reassigned successfully!');
-                    searchLeads(currentLeadsPage);
-                    return true;
-                } catch (err) {
-                    toast(err.message, 'error');
-                    return false;
-                }
-            });
-        } catch (err) {
-            toast('Error loading employees: ' + err.message, 'error');
-        }
+            try {
+                await api('PATCH', url);
+                toast('Lead reassigned successfully!');
+                searchLeads(currentLeadsPage);
+                if (document.getElementById('section-dashboard').classList.contains('active')) loadDashboard();
+                return true;
+            } catch (err) {
+                toast(err.message, 'error');
+                return false;
+            }
+        });
+    } catch (err) {
+        toast('Error loading employees: ' + err.message, 'error');
     }
+}
+    
+ 
+
     
     function showCustomModal(title, content, onConfirm) {
         const modal = document.createElement('div');

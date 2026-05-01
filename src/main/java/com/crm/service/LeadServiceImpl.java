@@ -334,6 +334,56 @@ public class LeadServiceImpl implements LeadService {
         return statistics;
     }
 
+    // Add to LeadServiceImpl.java
+    @Override
+    @Transactional
+    public LeadResponseDTO reassignLead(Long leadId, Long employeeId, String remarks) {
+        log.info("Reassigning lead {} to employee {}", leadId, employeeId);
+
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        Employee currentUser = employeeRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Lead lead = leadRepository.findById(leadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lead not found with ID: " + leadId));
+
+        Employee newEmployee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + employeeId));
+
+        Lead oldLead = copyLead(lead);
+
+        String oldEmployeeName = lead.getAssignedEmployee().getFirstName() + " " + lead.getAssignedEmployee().getLastName();
+        String newEmployeeName = newEmployee.getFirstName() + " " + newEmployee.getLastName();
+
+        lead.setAssignedEmployee(newEmployee);
+        lead.setLastUpdatedBy(currentUser.getEmail());
+        lead.setUpdateCount(lead.getUpdateCount() + 1);
+
+        Lead savedLead = leadRepository.save(lead);
+
+        List<String> changes = List.of(
+                "Assigned employee changed from '" + oldEmployeeName + "' to '" + newEmployeeName + "'"
+        );
+
+        String recordRemarks = remarks != null ? remarks : "Lead reassigned by " + currentUser.getEmail();
+        leadHistoryService.recordDetailedLeadUpdate(oldLead, savedLead, currentUser, recordRemarks);
+
+        emailService.sendLeadChangeNotificationToAdmin(oldLead, savedLead,
+                currentUser.getFirstName() + " " + currentUser.getLastName(),
+                "ADMIN", changes);
+
+        // Send assignment email to new employee
+        emailService.sendLeadAssignmentEmail(
+                newEmployee.getEmail(),
+                newEmployee.getFirstName() + " " + newEmployee.getLastName(),
+                lead.getName(),
+                lead.getLeadType().getDescription()
+        );
+
+        log.info("Lead {} reassigned to {} successfully", leadId, newEmployee.getEmail());
+        return mapToResponseDTO(savedLead);
+    }
+
     @Override
     public LeadResponseDTO updateLeadStage(Long id, String stage, String employeeEmail) {
         log.info("Updating lead stage for lead ID: {} to {}", id, stage);

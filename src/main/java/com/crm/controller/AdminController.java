@@ -218,6 +218,20 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(statistics, "Lead statistics retrieved successfully", request.getRequestURI()));
     }
 
+    @PatchMapping("/leads/{id}/assign")
+    public ResponseEntity<ApiResponse<LeadResponseDTO>> reassignLead(
+            @PathVariable String id,
+            @RequestParam String employeeId,  // Change from Long to String
+            @RequestParam(required = false) String remarks,
+            HttpServletRequest request) {
+        Long decryptedLeadId = CryptoUtil.decryptToLong(id);
+        Long decryptedEmployeeId = CryptoUtil.decryptToLong(employeeId);  // Decrypt the employee ID
+        log.info("Reassigning lead {} to employee {}", decryptedLeadId, decryptedEmployeeId);
+
+        LeadResponseDTO lead = leadService.reassignLead(decryptedLeadId, decryptedEmployeeId, remarks);
+        return ResponseEntity.ok(ApiResponse.success(lead, "Lead reassigned successfully", request.getRequestURI()));
+    }
+
     @GetMapping("/leads/{id}/history")
     public ResponseEntity<ApiResponse<List<LeadHistoryDTO>>> getLeadHistory(
             @PathVariable String id,
