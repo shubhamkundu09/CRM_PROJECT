@@ -15,11 +15,11 @@ import java.util.Collections;
 public class EmployeeUserDetails implements UserDetails {
 
     private Employee employee;
+    private String adminEmail;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Check if this is the admin user by email
-        if ("redcircle0908@gmail.com".equals(employee.getEmail())) {
+        if (adminEmail != null && adminEmail.equals(employee.getEmail())) {
             return Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
@@ -42,7 +42,7 @@ public class EmployeeUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return employee.getIsActive();  // Locked if not active
+        return employee.getIsActive();
     }
 
     @Override
@@ -52,6 +52,6 @@ public class EmployeeUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return employee.getIsActive();  // Enabled only if active
+        return employee.getIsActive();
     }
 }

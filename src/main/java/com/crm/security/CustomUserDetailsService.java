@@ -33,14 +33,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         Employee employee = employeeRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
 
-        // Check if employee is active
         if (!employee.getIsActive()) {
             log.warn("Login attempt by inactive user: {}", username);
             throw new UsernameNotFoundException("Account is deactivated. Please contact administrator.");
         }
 
         log.info("User found and active: {}", employee.getEmail());
-        return new EmployeeUserDetails(employee);
+        return new EmployeeUserDetails(employee, adminEmail);
     }
 
     @PostConstruct
